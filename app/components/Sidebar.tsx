@@ -72,7 +72,7 @@ export default function Sidebar({ activeSection, onSectionChange }: SidebarProps
     <div
       className={`bg-linear-to-b from-indigo-900 to-purple-900 text-white transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-80'
-      } min-h-screen p-4 shadow-2xl overflow-y-auto`}
+      } h-screen p-4 shadow-2xl overflow-y-auto sticky top-0`}
     >
       <div className="flex items-center justify-between mb-8">
         {!isCollapsed && (
