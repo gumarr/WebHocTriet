@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAppContext } from "@/src/lib/context/AppContext";
+import { useAppContext } from "@/lib/context/AppContext";
 
 export default function Navigation() {
   const router = useRouter();

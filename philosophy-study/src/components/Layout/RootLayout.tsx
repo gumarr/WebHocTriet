@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Toaster } from "react-hot-toast";
-import { AppProvider } from "@/src/lib/context/AppContext";
+import { AppProvider } from "@/lib/context/AppContext";
 import Navigation from "./Navigation";
 
 export default function RootLayout({
