@@ -1,13 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppContext } from "@/src/lib/context/AppContext";
+import { useAuth } from "@/src/lib/context/AuthContext";
+import { getChapters } from "@/src/lib/utils/data";
 
 export default function Navigation() {
   const router = useRouter();
   const { userProgress } = useAppContext();
+  const { isAdmin, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [totalLessons, setTotalLessons] = useState(10); // Default value for hydration stability
+
+  // Load actual total lessons from Supabase after component mounts
+  useEffect(() => {
+    const loadTotalLessons = async () => {
+      try {
+        const chapters = await getChapters();
+        const total = chapters.reduce(
+          (acc, chapter) => acc + (chapter.lessons?.length || 0),
+          0,
+        );
+        setTotalLessons(total);
+      } catch (error) {
+        console.error("Error loading total lessons:", error);
+        // Keep default value if loading fails
+      }
+    };
+
+    loadTotalLessons();
+  }, []);
 
   const navigationItems = [
     {
@@ -17,18 +40,36 @@ export default function Navigation() {
     },
     {
       name: "Hệ thống kiến thức",
-      href: "/knowledge-map",
+      href: "/",
       description: "Tổng quan toàn bộ chương trình triết học",
     },
+    // {
+    //   name: "Bài học",
+    //   href: "/lessons",
+    //   description: "Chi tiết các bài học theo chương",
+    // },
+    // {
+    //   name: "Thống kê",
+    //   href: "/stats",
+    //   description: "Theo dõi tiến độ học tập",
+    // },
+  ];
+
+  const adminNavigationItems = [
     {
-      name: "Bài học",
-      href: "/lessons",
-      description: "Chi tiết các bài học theo chương",
+      name: "Bảng điều khiển",
+      href: "/admin",
+      description: "Quản lý nội dung triết học",
     },
     {
-      name: "Thống kê",
-      href: "/stats",
-      description: "Theo dõi tiến độ học tập",
+      name: "Quản lý bài học",
+      href: "/admin/lessons",
+      description: "Thêm, sửa, xóa bài học",
+    },
+    {
+      name: "Quản lý flashcards",
+      href: "/admin/flashcards",
+      description: "Quản lý thẻ học và câu hỏi",
     },
   ];
 
@@ -38,9 +79,11 @@ export default function Navigation() {
   };
 
   const getProgressPercentage = () => {
-    const totalLessons = 10; // Số lượng bài học thực tế sẽ được tính động
+    // Use the actual total lessons from Supabase
     const completed = userProgress.completedLessons.length;
-    return Math.round((completed / totalLessons) * 100);
+    const percentage = Math.round((completed / totalLessons) * 100);
+    // Ensure percentage is between 0 and 100 for consistency
+    return Math.max(0, Math.min(100, percentage));
   };
 
   return (
@@ -76,6 +119,30 @@ export default function Navigation() {
                 {item.name}
               </button>
             ))}
+            {!isAdmin && (
+              <button
+                onClick={() => router.push("/login")}
+                className="px-4 py-2 text-sm text-emerald-600 hover:text-emerald-700 transition-colors rounded-lg"
+              >
+                Đăng nhập Admin
+              </button>
+            )}
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => router.push("/admin")}
+                  className="px-4 py-2 text-sm text-gray-700 hover:text-emerald-600 transition-colors border border-gray-300 rounded-lg"
+                >
+                  Trang Admin
+                </button>
+                <button
+                  onClick={signOut}
+                  className="px-4 py-2 text-sm text-gray-700 hover:text-red-600 transition-colors border border-gray-300 rounded-lg"
+                >
+                  Đăng xuất
+                </button>
+              </>
+            )}
           </div>
 
           {/* Progress Bar */}
@@ -97,7 +164,15 @@ export default function Navigation() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center space-x-2">
+            {isAdmin && (
+              <button
+                onClick={signOut}
+                className="px-3 py-2 text-sm text-gray-700 hover:text-red-600 transition-colors"
+              >
+                Đăng xuất
+              </button>
+            )}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-md text-gray-700 hover:text-emerald-600 hover:bg-gray-100 transition-colors"
@@ -162,6 +237,34 @@ export default function Navigation() {
                 ></div>
               </div>
             </div>
+
+            {/* Mobile Admin Actions */}
+            {!isAdmin && (
+              <div className="philosophy-card p-4 ">
+                <button
+                  onClick={() => router.push("/login")}
+                  className="w-full text-left text-emerald-600 hover:text-emerald-700 transition-colors"
+                >
+                  <div className="font-semibold">Đăng nhập Admin</div>
+                  <div className="text-sm text-emerald-500 mt-1">
+                    Truy cập chế độ quản trị
+                  </div>
+                </button>
+              </div>
+            )}
+            {isAdmin && (
+              <div className="philosophy-card p-4">
+                <button
+                  onClick={signOut}
+                  className="w-full text-left text-red-600 hover:text-red-700 transition-colors"
+                >
+                  <div className="font-semibold">Đăng xuất</div>
+                  <div className="text-sm text-red-500 mt-1">
+                    Kết thúc phiên quản trị
+                  </div>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -14,6 +14,10 @@ export interface Section {
   id: string;
   title: string;
   content: string;
+  order: number;
+  lessonId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Flashcard {
@@ -21,7 +25,7 @@ export interface Flashcard {
   question: string;
   answer: string;
   category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   createdAt: Date;
   lastReviewed?: Date;
   reviewCount: number;
@@ -44,8 +48,8 @@ export interface TestQuestion {
   id: string;
   question: string;
   options: string[];
-  correctAnswer: number;
+  correct_answer: number;
   explanation: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   category: string;
 }

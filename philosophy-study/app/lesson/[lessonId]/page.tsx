@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAppContext } from "@/src/lib/context/AppContext";
-import { getLessonById } from "@/src/lib/utils/data";
+import { getLessonById, getSectionsByLessonId } from "@/src/lib/supabase/services";
 import { Lesson } from "@/src/lib/types/lesson";
 import { LessonContent } from "@/src/components/Lesson/LessonContent";
 
@@ -14,12 +14,45 @@ export default function LessonDetail() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load lesson data
+  // Load lesson data and navigation
   useEffect(() => {
     const loadLesson = async () => {
       try {
-        const data = await getLessonById(params.lessonId as string);
-        setLesson(data);
+        const lessonData = await getLessonById(params.lessonId as string);
+        if (lessonData) {
+          // Get sections for this lesson
+          const sections = await getSectionsByLessonId(lessonData.id);
+          
+          // Create lesson data with sections
+          const lessonWithSections: Lesson = {
+            id: lessonData.id,
+            title: lessonData.title,
+            chapterId: lessonData.chapter_id,
+            order: lessonData.order,
+            content: lessonData.content,
+            summary: lessonData.summary,
+            flashcards: lessonData.flashcards || [],
+            test: lessonData.test || {
+              id: "",
+              lessonId: lessonData.id,
+              title: "Bài kiểm tra",
+              description: "",
+              duration: 0,
+              totalQuestions: 0,
+              passingScore: 0,
+              questions: [],
+            },
+            sections: sections.map((section, index) => ({
+              id: section.id,
+              title: section.title,
+              content: section.content,
+              order: section.order,
+              lessonId: section.lessonId,
+            })),
+          };
+          
+          setLesson(lessonWithSections);
+        }
       } catch (error) {
         console.error("Error loading lesson:", error);
       } finally {
@@ -30,10 +63,20 @@ export default function LessonDetail() {
   }, [params.lessonId]);
 
   const handleMarkCompleted = () => {
-    if (lesson && !userProgress.completedLessons.includes(lesson.id)) {
-      updateUserProgress({
-        completedLessons: [...userProgress.completedLessons, lesson.id],
-      });
+    if (lesson) {
+      if (userProgress.completedLessons.includes(lesson.id)) {
+        // Unmark as completed - remove from completed list
+        updateUserProgress({
+          completedLessons: userProgress.completedLessons.filter(
+            (id) => id !== lesson.id,
+          ),
+        });
+      } else {
+        // Mark as completed - add to completed list
+        updateUserProgress({
+          completedLessons: [...userProgress.completedLessons, lesson.id],
+        });
+      }
     }
   };
 

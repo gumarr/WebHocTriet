@@ -1,5 +1,6 @@
 import { Test } from './test';
 import { Flashcard } from './flashcard';
+import { Section } from './lesson';
 
 export interface Chapter {
   id: string;
@@ -7,23 +8,18 @@ export interface Chapter {
   description: string;
   order: number;
   lessons: Lesson[];
-  imageUrl?: string;
+  image_url?: string;
+  updated_at?: string;
 }
 
 export interface Lesson {
   id: string;
   title: string;
-  chapterId: string;
+  chapter_id: string;
   order: number;
   content?: string;
   sections?: Section[];
   summary: string;
   flashcards: Flashcard[];
   test: Test;
-}
-
-export interface Section {
-  id: string;
-  title: string;
-  content: string;
 }

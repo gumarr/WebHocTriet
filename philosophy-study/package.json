@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/supabase-js": "^2.93.1",
     "framer-motion": "^12.29.0",
     "mammoth": "^1.11.0",
     "mermaid": "^11.12.2",
@@ -34,6 +35,7 @@
     "@types/node": "^20.19.30",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.6.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "jest": "^30.2.0",

@@ -13,7 +13,7 @@ export interface TestQuestion {
   id: string;
   question: string;
   options: string[];
-  correctAnswer: number;
+  correct_answer: number;
   explanation: string;
   difficulty: 'easy' | 'medium' | 'hard';
   category: string;
