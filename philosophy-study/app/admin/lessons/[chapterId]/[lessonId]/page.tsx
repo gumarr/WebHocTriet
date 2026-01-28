@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import {
@@ -11,6 +11,188 @@ import {
 } from "@/src/lib/supabase/services";
 import { Section } from "@/src/lib/types/lesson";
 import { motion } from "framer-motion";
+import {
+  AnimatedQuote,
+  AnimatedSection,
+  AnimatedList,
+  AnimatedListItem,
+} from "@/src/components/Lesson/AnimatedContent";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSlug from "rehype-slug";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import { MermaidDiagram } from "@/src/components/Lesson/MermaidDiagram";
+import { RichTextEditor } from "@/src/components/Lesson/RichTextEditor";
+
+// Content Preview Component for collapsible content
+function ContentPreview({ content }: { content: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Check if content is overflowing after render
+  useEffect(() => {
+    if (contentRef.current) {
+      const element = contentRef.current;
+      setIsOverflowing(element.scrollHeight > element.clientHeight);
+    }
+  }, [content]);
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  return (
+    <div className="relative">
+      <div
+        ref={contentRef}
+        className={`prose prose-sm max-w-none ${
+          isExpanded ? "" : "max-h-40 overflow-hidden"
+        }`}
+        style={{
+          maxHeight: isExpanded ? "none" : "160px",
+          overflow: isExpanded ? "visible" : "hidden",
+        }}
+      >
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[
+            rehypeRaw,
+            rehypeSlug,
+            rehypeAutolinkHeadings,
+          ]}
+          components={{
+            h1: ({ children }) => (
+              <AnimatedSection delay={0.2}>
+                <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-indigo-500 pl-4 mb-4">
+                  {children}
+                </h2>
+              </AnimatedSection>
+            ),
+            h2: ({ children }) => (
+              <AnimatedSection delay={0.3}>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                  {children}
+                </h3>
+              </AnimatedSection>
+            ),
+            h3: ({ children }) => (
+              <AnimatedSection delay={0.4}>
+                <h4 className="text-lg font-medium text-gray-700 mb-3">
+                  {children}
+                </h4>
+              </AnimatedSection>
+            ),
+            p: ({ children }) => (
+              <AnimatedSection delay={0.5}>
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  {children}
+                </p>
+              </AnimatedSection>
+            ),
+            ul: ({ children }) => (
+              <AnimatedList>{children}</AnimatedList>
+            ),
+            li: ({ children }) => (
+              <AnimatedListItem>{children}</AnimatedListItem>
+            ),
+            blockquote: ({ children }) => (
+              <AnimatedQuote>{children}</AnimatedQuote>
+            ),
+            table: ({ children }) => (
+              <AnimatedSection delay={0.6}>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    {children}
+                  </table>
+                </div>
+              </AnimatedSection>
+            ),
+            strong: ({ children }) => (
+              <span className="font-bold text-indigo-600">
+                {children}
+              </span>
+            ),
+            code: ({
+              children,
+              className,
+              ...props
+            }: React.HTMLAttributes<HTMLElement>) => {
+              // Check if this code block contains mermaid content
+              const content = String(children);
+              if (
+                className?.includes("language-mermaid") ||
+                content.includes("graph TD") ||
+                content.includes("graph LR")
+              ) {
+                return (
+                  <AnimatedSection delay={0.7}>
+                    <MermaidDiagram
+                      content={content}
+                      theme="default"
+                      className="w-full"
+                    />
+                  </AnimatedSection>
+                );
+              }
+
+              // For regular code blocks, render normally
+              return (
+                <span
+                  className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono"
+                  {...props}
+                >
+                  {children}
+                </span>
+              );
+            },
+            pre: (props) => (
+              <AnimatedSection delay={0.8}>
+                <div className="bg-[#0f172a] p-6 rounded-xl overflow-x-auto border border-slate-800 shadow-2xl">
+                  <pre
+                    className="text-[13px] leading-[1.15] whitespace-pre font-mono text-[#4ade80]"
+                    style={{
+                      fontFamily: "'Courier New', Courier, monospace",
+                      letterSpacing: "0px",
+                    }}
+                    {...props}
+                  />
+                </div>
+              </AnimatedSection>
+            ),
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+      </div>
+
+      {isOverflowing && (
+        <button
+          onClick={toggleExpand}
+          className="mt-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors flex items-center space-x-1"
+        >
+          <span>{isExpanded ? "Thu gọn" : "Xem thêm"}</span>
+          <svg
+            className={`w-4 h-4 transition-transform ${
+              isExpanded ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function AdminLessonSectionsPage() {
   const router = useRouter();
@@ -25,7 +207,7 @@ export default function AdminLessonSectionsPage() {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    order: 0,
+    order: 1,
   });
 
   // Load sections data
@@ -58,7 +240,7 @@ export default function AdminLessonSectionsPage() {
     setFormData({
       title: section.title,
       content: section.content || "",
-      order: section.order || 0,
+      order: section.display_order || 1,
     });
     setIsModalOpen(true);
   };
@@ -79,8 +261,10 @@ export default function AdminLessonSectionsPage() {
       if (editingSection) {
         // Update existing section
         const updatedSection = await updateSection(editingSection.id, {
-          ...formData,
-          lessonId,
+          title: formData.title,
+          content: formData.content,
+          display_order: formData.order,
+          lesson_id: lessonId,
         });
         setSections(
           sections.map((section) =>
@@ -90,15 +274,20 @@ export default function AdminLessonSectionsPage() {
       } else {
         // Create new section
         const newSection = await createSection({
-          ...formData,
-          lessonId,
+          title: formData.title,
+          content: formData.content,
+          display_order: formData.order,
+          lesson_id: lessonId,
         });
-        setSections([...sections, newSection]);
+        // Only add to state if the section was created successfully
+        if (newSection && newSection.id) {
+          setSections([...sections, newSection]);
+        }
       }
       // ✅ Close modal after successful save
       setIsModalOpen(false);
       setEditingSection(null);
-      setFormData({ title: "", content: "", order: 0 });
+      setFormData({ title: "", content: "", order: 1 });
       // ✅ Reload sections to ensure data is up-to-date
       await loadSections();
     } catch (error) {
@@ -108,7 +297,7 @@ export default function AdminLessonSectionsPage() {
 
   const handleNewSection = () => {
     setEditingSection(null);
-    setFormData({ title: "", content: "", order: 0 });
+    setFormData({ title: "", content: "", order: 1 });
     setIsModalOpen(true);
   };
 
@@ -232,70 +421,63 @@ export default function AdminLessonSectionsPage() {
               </button>
             </div>
           ) : (
-            sections.map((section, index) => (
-              <motion.div
-                key={section.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="philosophy-card p-6 hover:shadow-lg transition-all duration-300"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <span className="bg-emerald-100 text-emerald-800 text-sm px-2 py-1 rounded-full font-medium">
-                        Phần {section.order}
-                      </span>
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        {section.title}
-                      </h3>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-4">
-                      {section.content
-                        ? section.content.length > 200
-                          ? `${section.content.substring(0, 200)}...`
-                          : section.content
-                        : "Chưa có nội dung"}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        {section.content
-                          ? `${section.content.length} ký tự`
-                          : "Chưa có nội dung"}
-                      </span>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(section)}
-                          className="px-3 py-1 text-sm bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDelete(section.id)}
-                          className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                        >
-                          Xóa
-                        </button>
+            sections
+              .filter((section) => section !== null)
+              .map((section, index) => (
+                <motion.div
+                  key={section.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="philosophy-card p-6 hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="bg-emerald-100 text-emerald-800 text-sm px-2 py-1 rounded-full font-medium">
+                          Phần {section.display_order || 1}
+                        </span>
+                        <h3 className="text-xl font-semibold text-gray-900">
+                          {section.title}
+                        </h3>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">
+                          {section.content
+                            ? `${section.content.length} ký tự`
+                            : "Chưa có nội dung"}
+                        </span>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(section)}
+                            className="px-3 py-1 text-sm bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDelete(section.id)}
+                            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                          >
+                            Xóa
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Content Preview */}
-                {section.content && (
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
-                      Nội dung:
-                    </h4>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                        {section.content}
-                      </p>
+                  {/* Content Preview */}
+                  {section.content && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                        Nội dung:
+                      </h4>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <ContentPreview content={section.content} />
+                      </div>
                     </div>
-                  </div>
-                )}
-              </motion.div>
-            ))
+                  )}
+                </motion.div>
+              ))
           )}
         </div>
       </div>
@@ -303,7 +485,7 @@ export default function AdminLessonSectionsPage() {
       {/* Edit/Create Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {editingSection
                 ? "Chỉnh sửa Phần nội dung"
@@ -332,20 +514,20 @@ export default function AdminLessonSectionsPage() {
                 </label>
                 <input
                   type="number"
-                  min="0"
+                  min="1"
                   value={formData.order}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
-                    if (value >= 0 || e.target.value === "") {
-                      setFormData({ ...formData, order: value || 0 });
+                    if (value >= 1 || e.target.value === "") {
+                      setFormData({ ...formData, order: value || 1 });
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-800 text-gray-800"
-                  placeholder="Nhập thứ tự hiển thị (tối thiểu 0)"
+                  placeholder="Nhập thứ tự hiển thị (tối thiểu 1)"
                 />
-                {formData.order < 0 && (
+                {formData.order < 1 && (
                   <p className="text-red-600 text-sm mt-1">
-                    Thứ tự phải lớn hơn hoặc bằng 0
+                    Thứ tự phải lớn hơn hoặc bằng 1
                   </p>
                 )}
               </div>
@@ -354,14 +536,13 @@ export default function AdminLessonSectionsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Nội dung
                 </label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
+                <RichTextEditor
+                  value={formData.content || ""}
+                  onChange={(value) =>
+                    setFormData({ ...formData, content: value || "" })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-800 text-gray-800"
-                  placeholder="Nhập nội dung chi tiết cho phần này"
-                  rows={10}
+                  placeholder="Nhập nội dung chi tiết cho phần này..."
+                  className="min-h-[300px]"
                 />
               </div>
             </div>

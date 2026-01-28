@@ -51,7 +51,7 @@ export default async function StoryPage() {
                   <div className="relative w-full h-64 mb-6 rounded-xl overflow-hidden shadow-lg">
                     {chapter.image_url ? (
                       <Image
-                        src={chapter.image_url}
+                        src={`${chapter.image_url}?t=${chapter.updated_at ? new Date(chapter.updated_at).getTime() : ''}`}
                         alt={chapter.title}
                         fill
                         className="object-cover"

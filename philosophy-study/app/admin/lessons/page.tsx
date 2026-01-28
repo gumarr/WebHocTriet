@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import {
   getChapters,
+  getChaptersWithLessons,
   createChapter,
   updateChapter,
   deleteChapter,
 } from "@/src/lib/supabase/services";
 import { Chapter } from "@/src/lib/types/chapter";
 import { motion } from "framer-motion";
+import { ChapterImageUpload } from "@/src/components/Chapter/ChapterImageUpload";
 
 export default function AdminLessonsPage() {
   const router = useRouter();
@@ -22,7 +24,7 @@ export default function AdminLessonsPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    order: 0,
+    order: 1,
     image_url: "",
   });
 
@@ -35,7 +37,7 @@ export default function AdminLessonsPage() {
 
   const loadChapters = async () => {
     try {
-      const data = await getChapters();
+      const data = await getChaptersWithLessons();
       setChapters(data);
     } catch (error) {
       console.error("Error loading chapters:", error);
@@ -56,7 +58,7 @@ export default function AdminLessonsPage() {
     setFormData({
       title: chapter.title,
       description: chapter.description || "",
-      order: chapter.order || 0,
+      order: chapter.display_order || 1,
       image_url: chapter.image_url || "",
     });
     setIsModalOpen(true);
@@ -77,7 +79,10 @@ export default function AdminLessonsPage() {
     try {
       if (editingChapter) {
         // Update existing chapter
-        const updatedChapter = await updateChapter(editingChapter.id, formData);
+        const updatedChapter = await updateChapter(editingChapter.id, {
+          ...formData,
+          display_order: formData.order,
+        });
         setChapters(
           chapters.map((ch) =>
             ch.id === editingChapter.id ? updatedChapter : ch,
@@ -85,13 +90,16 @@ export default function AdminLessonsPage() {
         );
       } else {
         // Create new chapter
-        const newChapter = await createChapter(formData);
+        const newChapter = await createChapter({
+          ...formData,
+          display_order: formData.order,
+        });
         setChapters([...chapters, newChapter]);
       }
       // ✅ Close modal after successful save
       setIsModalOpen(false);
       setEditingChapter(null);
-      setFormData({ title: "", description: "", order: 0, image_url: "" });
+      setFormData({ title: "", description: "", order: 1, image_url: "" });
       // ✅ Reload chapters to ensure data is up-to-date
       await loadChapters();
     } catch (error) {
@@ -101,7 +109,7 @@ export default function AdminLessonsPage() {
 
   const handleNewChapter = () => {
     setEditingChapter(null);
-    setFormData({ title: "", description: "", order: 0, image_url: "" });
+    setFormData({ title: "", description: "", order: 1, image_url: "" });
     setIsModalOpen(true);
   };
 
@@ -201,7 +209,7 @@ export default function AdminLessonsPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Chương {chapter.order}: {chapter.title}
+                    Chương {chapter.display_order}: {chapter.title}
                   </h3>
                   <p className="text-gray-600 text-sm mb-4">
                     {chapter.description || "Chưa có mô tả"}
@@ -250,7 +258,7 @@ export default function AdminLessonsPage() {
                       >
                         <span>• {lesson.title}</span>
                         <span className="text-xs text-gray-400">
-                          #{lesson.order}
+                          #{lesson.display_order}
                         </span>
                       </div>
                     ))}
@@ -303,7 +311,7 @@ export default function AdminLessonsPage() {
       {/* Edit/Create Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {editingChapter ? "Chỉnh sửa Chương" : "Tạo Chương mới"}
             </h3>
@@ -330,20 +338,20 @@ export default function AdminLessonsPage() {
                 </label>
                 <input
                   type="number"
-                  min="0"
+                  min="1"
                   value={formData.order}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
-                    if (value >= 0 || e.target.value === "") {
-                      setFormData({ ...formData, order: value || 0 });
+                    if (value >= 1 || e.target.value === "") {
+                      setFormData({ ...formData, order: value || 1 });
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-800 text-gray-800"
-                  placeholder="Nhập thứ tự hiển thị (tối thiểu 0)"
+                  placeholder="Nhập thứ tự hiển thị (tối thiểu 1)"
                 />
-                {formData.order < 0 && (
+                {formData.order < 1 && (
                   <p className="text-red-600 text-sm mt-1">
-                    Thứ tự phải lớn hơn hoặc bằng 0
+                    Thứ tự phải lớn hơn hoặc bằng 1
                   </p>
                 )}
               </div>
@@ -365,84 +373,88 @@ export default function AdminLessonsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL ảnh
+                  Ảnh chương
                 </label>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={formData.image_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image_url: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-800 text-gray-800"
-                    placeholder="Nhập URL ảnh đại diện (tùy chọn)"
+                <div className="space-y-4">
+                  {/* File Upload Component */}
+                  <ChapterImageUpload
+                    chapterId={editingChapter?.id || ""}
+                    currentImageUrl={formData.image_url}
+                    onImageChange={(imageUrl) => {
+                      setFormData({ ...formData, image_url: imageUrl || "" });
+                    }}
                   />
-                  
-                  {/* Image Upload from URL */}
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      id="imageUrlInput"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-800 text-gray-800"
-                      placeholder="Dán URL ảnh từ web vào đây..."
-                    />
-                    <button
-                      onClick={async () => {
-                        const urlInput = document.getElementById('imageUrlInput') as HTMLInputElement;
-                        const imageUrl = urlInput.value.trim();
-                        
-                        if (!imageUrl) {
-                          alert('Vui lòng nhập URL ảnh');
-                          return;
-                        }
 
-                        try {
-                          // Upload to Supabase via API route with chapter ID for automatic override
-                          const response = await fetch('/api/upload-image', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              imageUrl: imageUrl,
-                              chapterId: editingChapter?.id,
-                            }),
-                          });
-
-                          const result = await response.json();
-
-                          if (response.ok && result.success) {
-                            setFormData({ ...formData, image_url: result.imageUrl });
-                            urlInput.value = '';
-                            alert('Tải ảnh lên thành công!');
-                          } else {
-                            alert(result.error || 'Tải ảnh lên thất bại. Vui lòng thử lại.');
-                          }
-                        } catch (error) {
-                          console.error('Error uploading image:', error);
-                          alert('Tải ảnh lên thất bại. Vui lòng thử lại.');
-                        }
-                      }}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
-                    >
-                      Tải lên từ URL
-                    </button>
+                  {/* Divider */}
+                  <div className="flex items-center my-4">
+                    <hr className="flex-1 border-gray-300" />
+                    <span className="px-4 text-sm text-gray-500">Hoặc</span>
+                    <hr className="flex-1 border-gray-300" />
                   </div>
-                  
-                  {/* Preview */}
-                  {formData.image_url && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600 mb-2">Xem trước:</p>
-                      <img
-                        src={formData.image_url}
-                        alt="Preview"
-                        className="w-32 h-32 object-cover rounded-lg border border-gray-300"
-                        onError={(e) => {
-                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik02NCAzMEM0NS4yNzI2IDMwIDMwIDQ1LjI3MjYgMzAgNjRDMzAgODIuNzI3NCA0NS4yNzI2IDk4IDY0IDk4QzgyLjcyNzQgOTggOTggODIuNzI3NCA5OCA2NEM5OCA0NS4yNzI2IDgyLjcyNzQgMzAgNjQgMzBaTTU0IDY0QzU0IDY5LjUyMjggNTguNDc3MiA3NCA2NCA3NEM2OS41MjI4IDc0IDc0IDY5LjUyMjggNzQgNjRDNzQgNTguNDc3MiA2OS41MjI4IDU0IDY0IDU0QzU4LjQ3NzIgNTQgNTQgNTguNDc3MiA1NCA2NFoiIGZpbGw9IiM5MzkzOTciLz4KPC9zdmc+Cg==';
-                        }}
+
+                  {/* URL Upload Section */}
+                  <div className="space-y-3">
+                    <label className="block text-xs font-medium text-gray-600">
+                      Tải lên từ URL
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        id="imageUrlInput"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-800 text-gray-800"
+                        placeholder="Dán URL ảnh từ web vào đây..."
                       />
+                      <button
+                        onClick={async () => {
+                          const urlInput = document.getElementById(
+                            "imageUrlInput",
+                          ) as HTMLInputElement;
+                          const imageUrl = urlInput.value.trim();
+
+                          if (!imageUrl) {
+                            alert("Vui lòng nhập URL ảnh");
+                            return;
+                          }
+
+                          try {
+                            // Upload to Supabase via API route with chapter ID for automatic override
+                            const response = await fetch("/api/upload-image", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                imageUrl: imageUrl,
+                                chapterId: editingChapter?.id,
+                              }),
+                            });
+
+                            const result = await response.json();
+
+                            if (response.ok && result.success) {
+                              setFormData({
+                                ...formData,
+                                image_url: result.imageUrl,
+                              });
+                              urlInput.value = "";
+                              alert("Tải ảnh lên thành công!");
+                            } else {
+                              alert(
+                                result.error ||
+                                  "Tải ảnh lên thất bại. Vui lòng thử lại.",
+                              );
+                            }
+                          } catch (error) {
+                            console.error("Error uploading image:", error);
+                            alert("Tải ảnh lên thất bại. Vui lòng thử lại.");
+                          }
+                        }}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+                      >
+                        Tải lên từ URL
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>

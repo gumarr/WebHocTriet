@@ -11,6 +11,7 @@ import {
 } from "@/src/lib/supabase/services";
 import { Lesson, Section } from "@/src/lib/types/lesson";
 import { motion } from "framer-motion";
+import { ChapterImageUpload } from "@/src/components/Chapter/ChapterImageUpload";
 
 export default function AdminChapterLessonsPage() {
   const router = useRouter();
@@ -39,10 +40,12 @@ export default function AdminChapterLessonsPage() {
   const loadLessons = async () => {
     try {
       const data = await getLessonsByChapterId(chapterId);
-      setLessons(data.map(lesson => ({
-        ...lesson,
-        chapterId: lesson.chapter_id, // Map snake_case to camelCase
-      })));
+      setLessons(
+        data.map((lesson) => ({
+          ...lesson,
+          chapterId: lesson.chapter_id, // Map snake_case to camelCase
+        })),
+      );
     } catch (error) {
       console.error("Error loading lessons:", error);
     } finally {
@@ -61,7 +64,7 @@ export default function AdminChapterLessonsPage() {
     setEditingLesson(lesson);
     setFormData({
       title: lesson.title,
-      order: lesson.order || 0,
+      order: lesson.display_order || 1,
       content: lesson.content || "",
       summary: lesson.summary || "",
       sections: lesson.sections || [],
@@ -85,12 +88,15 @@ export default function AdminChapterLessonsPage() {
       if (editingLesson) {
         // Update existing lesson
         const updatedLesson = await updateLesson(editingLesson.id, {
-          ...formData,
-          chapter_id: chapterId, // Map camelCase to snake_case
+          title: formData.title,
+          chapter_id: chapterId,
+          display_order: formData.order,
+          content: formData.content,
+          summary: formData.summary,
         });
         setLessons(
           lessons.map((lesson) =>
-            lesson.id === editingLesson.id 
+            lesson.id === editingLesson.id
               ? { ...updatedLesson, chapterId: updatedLesson.chapter_id } // Map snake_case to camelCase
               : lesson,
           ),
@@ -98,17 +104,23 @@ export default function AdminChapterLessonsPage() {
       } else {
         // Create new lesson
         const newLesson = await createLesson({
-          ...formData,
-          chapterId,
+          title: formData.title,
+          chapterId: chapterId,
+          display_order: formData.order,
+          content: formData.content,
+          summary: formData.summary,
         });
-        setLessons([...lessons, { ...newLesson, chapterId: newLesson.chapter_id }]); // Map snake_case to camelCase
+        setLessons([
+          ...lessons,
+          { ...newLesson, chapterId: newLesson.chapter_id },
+        ]); // Map snake_case to camelCase
       }
       // ✅ Close modal after successful save
       setIsModalOpen(false);
       setEditingLesson(null);
       setFormData({
         title: "",
-        order: 0,
+        order: 1,
         content: "",
         summary: "",
         sections: [],
@@ -124,7 +136,7 @@ export default function AdminChapterLessonsPage() {
     setEditingLesson(null);
     setFormData({
       title: "",
-      order: 0,
+      order: 1,
       content: "",
       summary: "",
       sections: [],
@@ -175,7 +187,7 @@ export default function AdminChapterLessonsPage() {
                 Quản lý Bài học
               </h1>
               <p className="text-gray-600 mt-1">
-                Quản lý các bài học trong chương {chapterId}
+                Quản lý các bài học trong chương
               </p>
             </div>
             <div className="flex items-center space-x-4">
@@ -228,14 +240,14 @@ export default function AdminChapterLessonsPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Bài {lesson.order}: {lesson.title}
+                    Bài {lesson.display_order}: {lesson.title}
                   </h3>
                   <p className="text-gray-600 text-sm mb-4">
                     {lesson.summary || "Chưa có mô tả"}
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">
-                      Thứ tự: {lesson.order}
+                      Thứ tự: {lesson.display_order}
                     </span>
                     <div className="flex space-x-2">
                       <button
@@ -361,22 +373,17 @@ export default function AdminChapterLessonsPage() {
                 </label>
                 <input
                   type="number"
-                  min="0"
+                  min="1"
                   value={formData.order}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
-                    if (value >= 0 || e.target.value === "") {
-                      setFormData({ ...formData, order: value || 0 });
+                    if (value >= 1 || e.target.value === "") {
+                      setFormData({ ...formData, order: value || 1 });
                     }
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-gray-800 text-gray-800"
-                  placeholder="Nhập thứ tự hiển thị (tối thiểu 0)"
+                  placeholder="Nhập thứ tự hiển thị (tối thiểu 1)"
                 />
-                {formData.order < 0 && (
-                  <p className="text-red-600 text-sm mt-1">
-                    Thứ tự phải lớn hơn hoặc bằng 0
-                  </p>
-                )}
               </div>
 
               <div>
@@ -394,7 +401,7 @@ export default function AdminChapterLessonsPage() {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Nội dung
                 </label>
@@ -407,7 +414,7 @@ export default function AdminChapterLessonsPage() {
                   placeholder="Nhập nội dung bài học"
                   rows={5}
                 />
-              </div>
+              </div> */}
             </div>
 
             <div className="flex justify-end space-x-3 mt-6">

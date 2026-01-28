@@ -12,6 +12,8 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "^2.93.1",
+    "@tiptap/pm": "^3.17.1",
+    "@uiw/react-md-editor": "^4.0.11",
     "framer-motion": "^12.29.0",
     "mammoth": "^1.11.0",
     "mermaid": "^11.12.2",

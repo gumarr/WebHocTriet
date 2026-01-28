@@ -28,7 +28,7 @@ export default function LessonDetail() {
             id: lessonData.id,
             title: lessonData.title,
             chapterId: lessonData.chapter_id,
-            order: lessonData.order,
+            display_order: lessonData.display_order,
             content: lessonData.content,
             summary: lessonData.summary,
             flashcards: lessonData.flashcards || [],
@@ -46,8 +46,8 @@ export default function LessonDetail() {
               id: section.id,
               title: section.title,
               content: section.content,
-              order: section.order,
-              lessonId: section.lessonId,
+              display_order: section.display_order,
+              lesson_id: section.lesson_id,
             })),
           };
           

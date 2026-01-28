@@ -2,7 +2,7 @@ export interface Lesson {
   id: string;
   title: string;
   chapterId: string;
-  order: number;
+  display_order: number;
   content?: string;
   sections?: Section[];
   summary: string;
@@ -14,8 +14,8 @@ export interface Section {
   id: string;
   title: string;
   content: string;
-  order: number;
-  lessonId: string;
+  display_order: number;
+  lesson_id: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

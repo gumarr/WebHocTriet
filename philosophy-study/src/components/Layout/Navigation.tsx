@@ -55,24 +55,6 @@ export default function Navigation() {
     // },
   ];
 
-  const adminNavigationItems = [
-    {
-      name: "Bảng điều khiển",
-      href: "/admin",
-      description: "Quản lý nội dung triết học",
-    },
-    {
-      name: "Quản lý bài học",
-      href: "/admin/lessons",
-      description: "Thêm, sửa, xóa bài học",
-    },
-    {
-      name: "Quản lý flashcards",
-      href: "/admin/flashcards",
-      description: "Quản lý thẻ học và câu hỏi",
-    },
-  ];
-
   const handleNavigation = (href: string) => {
     router.push(href);
     setIsMenuOpen(false);

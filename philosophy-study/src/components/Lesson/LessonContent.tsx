@@ -56,7 +56,7 @@ export function LessonContent({ lesson }: LessonContentProps) {
   const getAllLessonsInChapter = async () => {
     const chapters = await getChapters();
     const chapter = chapters.find((c) => c.id === lesson.chapterId);
-    return chapter ? chapter.lessons.sort((a, b) => a.order - b.order) : [];
+    return chapter ? chapter.lessons.sort((a, b) => a.display_order - b.display_order) : [];
   };
 
   // Fetch additional lesson data (flashcards and test) when needed
@@ -261,11 +261,11 @@ export function LessonContent({ lesson }: LessonContentProps) {
                 <p className="text-md text-gray-600">{lesson.summary}</p>
               </div>
             </div>
-            <div className="text-center">
-              <span className="inline-block bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1 rounded-full ml-2">
-                Phần {lesson.order}
-              </span>
-            </div>
+              <div className="text-center">
+                <span className="inline-block bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1 rounded-full ml-2">
+                  Phần {lesson.display_order}
+                </span>
+              </div>
           </div>
         </div>
       </div>
