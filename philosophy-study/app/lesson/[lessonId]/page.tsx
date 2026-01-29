@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAppContext } from "@/src/lib/context/AppContext";
-import { getLessonById, getSectionsByLessonId } from "@/src/lib/supabase/services";
+import {
+  getLessonById,
+  getSectionsByLessonId,
+} from "@/src/lib/supabase/services";
 import { Lesson } from "@/src/lib/types/lesson";
 import { LessonContent } from "@/src/components/Lesson/LessonContent";
 
@@ -22,16 +25,28 @@ export default function LessonDetail() {
         if (lessonData) {
           // Get sections for this lesson
           const sections = await getSectionsByLessonId(lessonData.id);
-          
+
           // Create lesson data with sections
           const lessonWithSections: Lesson = {
             id: lessonData.id,
             title: lessonData.title,
-            chapterId: lessonData.chapter_id,
+            chapter_id: lessonData.chapter_id,
             display_order: lessonData.display_order,
             content: lessonData.content,
             summary: lessonData.summary,
-            flashcards: lessonData.flashcards || [],
+            flashcards: (lessonData.flashcards || []).map((flashcard) => ({
+              id: flashcard.id,
+              question: flashcard.question,
+              answer: flashcard.answer,
+              category: flashcard.category,
+              difficulty: flashcard.difficulty,
+              createdAt: flashcard.created_at,
+              lastReviewed: flashcard.lastReviewed,
+              reviewCount: flashcard.review_count,
+              correctCount: flashcard.correct_count,
+              isMarked: flashcard.is_marked,
+              lesson_id: flashcard.lesson_id,
+            })),
             test: lessonData.test || {
               id: "",
               lessonId: lessonData.id,
@@ -50,7 +65,7 @@ export default function LessonDetail() {
               lesson_id: section.lesson_id,
             })),
           };
-          
+
           setLesson(lessonWithSections);
         }
       } catch (error) {

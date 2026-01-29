@@ -43,7 +43,18 @@ export default function AdminChapterLessonsPage() {
       setLessons(
         data.map((lesson) => ({
           ...lesson,
-          chapterId: lesson.chapter_id, // Map snake_case to camelCase
+          flashcards: lesson.flashcards?.map((fc) => ({
+            id: fc.id,
+            question: fc.question,
+            answer: fc.answer,
+            category: fc.category,
+            difficulty: fc.difficulty,
+            createdAt: fc.created_at,
+            lastReviewed: fc.lastReviewed,
+            reviewCount: fc.review_count,
+            correctCount: fc.correct_count,
+            isMarked: fc.is_marked,
+          })) || [],
         })),
       );
     } catch (error) {
@@ -97,7 +108,21 @@ export default function AdminChapterLessonsPage() {
         setLessons(
           lessons.map((lesson) =>
             lesson.id === editingLesson.id
-              ? { ...updatedLesson, chapterId: updatedLesson.chapter_id } // Map snake_case to camelCase
+              ? { 
+                  ...updatedLesson,
+                  flashcards: updatedLesson.flashcards?.map((fc) => ({
+                    id: fc.id,
+                    question: fc.question,
+                    answer: fc.answer,
+                    category: fc.category,
+                    difficulty: fc.difficulty,
+                    createdAt: fc.created_at,
+                    lastReviewed: fc.lastReviewed,
+                    reviewCount: fc.review_count,
+                    correctCount: fc.correct_count,
+                    isMarked: fc.is_marked,
+                  })) || [],
+                }
               : lesson,
           ),
         );
@@ -112,8 +137,22 @@ export default function AdminChapterLessonsPage() {
         });
         setLessons([
           ...lessons,
-          { ...newLesson, chapterId: newLesson.chapter_id },
-        ]); // Map snake_case to camelCase
+          { 
+            ...newLesson,
+            flashcards: newLesson.flashcards?.map((fc) => ({
+              id: fc.id,
+              question: fc.question,
+              answer: fc.answer,
+              category: fc.category,
+              difficulty: fc.difficulty,
+              createdAt: fc.created_at,
+              lastReviewed: fc.lastReviewed,
+              reviewCount: fc.review_count,
+              correctCount: fc.correct_count,
+              isMarked: fc.is_marked,
+            })) || [],
+          },
+        ]);
       }
       // ✅ Close modal after successful save
       setIsModalOpen(false);

@@ -6,7 +6,8 @@ import type {
   Chapter,
   Lesson,
 } from "../types";
-import type { Test, TestQuestion, Section } from "../types/lesson";
+import type { Test, TestQuestion } from "../types/test";
+import type { Section } from "../types/lesson";
 
 // Export supabase for use in other modules
 export { supabase };
@@ -39,18 +40,16 @@ export async function updateUserProgress(
   if (error) throw error;
 }
 
-export async function getUserFlashcards(userId: string): Promise<Flashcard[]> {
+export async function getUserFlashcards(): Promise<Flashcard[]> {
   const { data, error } = await supabase
     .from("flashcards")
-    .select("*")
-    .eq("user_id", userId);
+    .select("*");
 
   if (error) throw error;
   return data || [];
 }
 
 export async function createFlashcard(
-  userId: string,
   flashcard: Omit<Flashcard, "id" | "created_at" | "updated_at">,
 ): Promise<Flashcard> {
   const { data, error } = await supabase
@@ -58,7 +57,6 @@ export async function createFlashcard(
     .insert([
       {
         ...flashcard,
-        user_id: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -521,25 +519,36 @@ function mapLessonFromSupabase(data: {
     };
   }
   
-  return {
-    id: data.id,
-    title: data.title,
-    chapter_id: data.chapter_id,
-    display_order: data.display_order,
-    content: data.content,
-    summary: data.summary,
-    flashcards: data.flashcards || [],
-    test: data.test || {
-      id: "",
-      lessonId: data.id,
-      title: "Bài kiểm tra",
-      description: "",
-      duration: 0,
-      totalQuestions: 0,
-      passingScore: 0,
-      questions: [],
-    },
-  };
+    return {
+      id: data.id,
+      title: data.title,
+      chapter_id: data.chapter_id,
+      display_order: data.display_order,
+      content: data.content,
+      summary: data.summary,
+      flashcards: data.flashcards ? data.flashcards.map(flashcard => ({
+        id: flashcard.id,
+        question: flashcard.question,
+        answer: flashcard.answer,
+        category: flashcard.category,
+        difficulty: flashcard.difficulty,
+        createdAt: flashcard.created_at,
+        lastReviewed: flashcard.lastReviewed,
+        reviewCount: flashcard.review_count,
+        correctCount: flashcard.correct_count,
+        isMarked: flashcard.is_marked,
+      })) : [],
+      test: data.test || {
+        id: "",
+        lessonId: data.id,
+        title: "Bài kiểm tra",
+        description: "",
+        duration: 0,
+        totalQuestions: 0,
+        passingScore: 0,
+        questions: [],
+      },
+    };
 }
 
 // Keep the services object for backward compatibility
@@ -615,7 +624,18 @@ export const supabaseServices = {
       display_order: data.display_order,
       content: data.content,
       summary: data.summary,
-      flashcards: data.flashcards || [],
+      flashcards: data.flashcards ? data.flashcards.map(flashcard => ({
+        id: flashcard.id,
+        question: flashcard.question,
+        answer: flashcard.answer,
+        category: flashcard.category,
+        difficulty: flashcard.difficulty,
+        createdAt: flashcard.created_at,
+        lastReviewed: flashcard.lastReviewed,
+        reviewCount: flashcard.review_count,
+        correctCount: flashcard.correct_count,
+        isMarked: flashcard.is_marked,
+      })) : [],
       test: data.test || {
         id: "",
         lessonId: data.id,

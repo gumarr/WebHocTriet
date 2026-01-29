@@ -198,11 +198,19 @@ export default function AdminPage() {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
+                  {/* The "Back" Card */}
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11v4a2 2 0 002 2m0 0v-4m0 4h4m-4-4H9"
+                    d="M7 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2"
+                  />
+                  {/* The "Front" Card */}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 8h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2z"
                   />
                 </svg>
               </div>

@@ -7,12 +7,12 @@ export interface Chapter {
   title: string;
   description: string;
   display_order: number;
-  lessons: Lesson[];
+  lessons: ChapterLesson[];
   image_url?: string;
   updated_at?: string;
 }
 
-export interface Lesson {
+export interface ChapterLesson {
   id: string;
   title: string;
   chapter_id: string;

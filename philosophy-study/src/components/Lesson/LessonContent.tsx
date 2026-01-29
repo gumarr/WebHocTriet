@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Lesson } from "../../lib/types/lesson";
+import { Lesson, LessonFlashcard, LessonTest } from "../../lib/types/lesson";
+import { Flashcard as SupabaseFlashcard } from "../../lib/types/flashcard";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -55,17 +56,33 @@ export function LessonContent({ lesson }: LessonContentProps) {
   // Get all lessons in the same chapter for navigation
   const getAllLessonsInChapter = async () => {
     const chapters = await getChapters();
-    const chapter = chapters.find((c) => c.id === lesson.chapterId);
-    return chapter ? chapter.lessons.sort((a, b) => a.display_order - b.display_order) : [];
+    const chapter = chapters.find((c) => c.id === lesson.chapter_id);
+    return chapter
+      ? chapter.lessons.sort((a, b) => a.display_order - b.display_order)
+      : [];
   };
 
   // Fetch additional lesson data (flashcards and test) when needed
   const fetchLessonData = async () => {
     try {
       // Fetch flashcards for this lesson
-      const flashcards = await supabaseServices.getFlashcardsByLessonId(
+      const rawFlashcards = await supabaseServices.getFlashcardsByLessonId(
         lesson.id,
       );
+
+      // Map snake_case properties to camelCase to match Lesson interface
+      const flashcards = rawFlashcards.map((flashcard: SupabaseFlashcard) => ({
+        id: flashcard.id,
+        question: flashcard.question,
+        answer: flashcard.answer,
+        category: flashcard.category,
+        difficulty: flashcard.difficulty,
+        createdAt: flashcard.created_at,
+        lastReviewed: flashcard.lastReviewed,
+        reviewCount: flashcard.review_count,
+        correctCount: flashcard.correct_count,
+        isMarked: flashcard.is_marked,
+      }));
 
       // Fetch test for this lesson
       const test = await supabaseServices.getTestByLessonId(lesson.id);
@@ -143,7 +160,7 @@ export function LessonContent({ lesson }: LessonContentProps) {
 
   // Load lessons and set up navigation
   useEffect(() => {
-    const loadLessons = async () => {
+    const loadLessons = async (): Promise<void> => {
       try {
         const lessons = await getAllLessonsInChapter();
         const currentIndex = lessons.findIndex((l) => l.id === lesson.id);
@@ -152,15 +169,72 @@ export function LessonContent({ lesson }: LessonContentProps) {
         const next =
           currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
 
-        setPrevLesson(prev ? { ...prev, chapterId: prev.chapter_id } : null);
-        setNextLesson(next ? { ...next, chapterId: next.chapter_id } : null);
+        // Convert chapter Lesson type to component Lesson type
+        const convertLesson = (chapterLesson: {
+          id: string;
+          title: string;
+          summary: string;
+          display_order: number;
+          chapter_id: string;
+          sections?: Array<{
+            id: string;
+            title: string;
+            content: string;
+            display_order: number;
+            lesson_id: string;
+          }>;
+          flashcards?: Array<{
+            id: string;
+            question: string;
+            answer: string;
+            category: string;
+            difficulty: "easy" | "medium" | "hard";
+            created_at: Date;
+            lastReviewed?: Date;
+            review_count: number;
+            correct_count: number;
+            is_marked: boolean;
+          }>;
+        }): Lesson | null => {
+          if (!chapterLesson) return null;
+
+          return {
+            ...chapterLesson,
+            flashcards:
+              chapterLesson.flashcards?.map((fc) => ({
+                id: fc.id,
+                question: fc.question,
+                answer: fc.answer,
+                category: fc.category,
+                difficulty: fc.difficulty,
+                createdAt: fc.created_at,
+                lastReviewed: fc.lastReviewed || undefined,
+                reviewCount: fc.review_count,
+                correctCount: fc.correct_count,
+                isMarked: fc.is_marked,
+              })) || [],
+            test: {
+              id: "",
+              lessonId: chapterLesson.id,
+              title: "",
+              description: "",
+              duration: 0,
+              totalQuestions: 0,
+              passingScore: 0,
+              questions: [],
+            },
+          };
+        };
+
+        setPrevLesson(prev ? convertLesson(prev) : null);
+        setNextLesson(next ? convertLesson(next) : null);
       } catch (error) {
         // Navigation loading failed, but don't break the page
       }
-
-      loadLessons();
     };
-  }, [lesson.id, lesson.chapterId]);
+
+    loadLessons();
+  }, [lesson.id, lesson.chapter_id]);
 
   const handleNavigateToLesson = (lessonId: string) => {
     router.push(`/lesson/${lessonId}`);
@@ -181,14 +255,14 @@ export function LessonContent({ lesson }: LessonContentProps) {
   const handleNextFlashcard = () => {
     setShowFlashcard(false);
     setCurrentFlashcardIndex((prev) =>
-      prev < lessonData.flashcards.length - 1 ? prev + 1 : 0,
+      prev < (lessonData.flashcards?.length || 0) - 1 ? prev + 1 : 0,
     );
   };
 
   const handlePrevFlashcard = () => {
     setShowFlashcard(false);
     setCurrentFlashcardIndex((prev) =>
-      prev > 0 ? prev - 1 : lessonData.flashcards.length - 1,
+      prev > 0 ? prev - 1 : (lessonData.flashcards?.length || 0) - 1,
     );
   };
 
@@ -205,14 +279,14 @@ export function LessonContent({ lesson }: LessonContentProps) {
   };
 
   const calculateScore = () => {
-    let correct = 0;
+    let score = 0;
     if (lessonData.test?.questions) {
       lessonData.test.questions.forEach((question) => {
         if (selectedAnswers[question.id] === question.correct_answer) {
-          correct++;
+          score++;
         }
       });
-      return Math.round((correct / lessonData.test.questions.length) * 100);
+      return Math.round((score / lessonData.test.questions.length) * 100);
     }
     return 0;
   };
@@ -228,7 +302,7 @@ export function LessonContent({ lesson }: LessonContentProps) {
   const parseContentIntoPages = () => {
     if (lesson.sections && lesson.sections.length > 0) {
       // Use sections from Supabase as pages
-      return lesson.sections.map((section, index) => ({
+      return lesson.sections.map((section, index: number) => ({
         id: `section-${index + 1}`,
         title: section.title,
         content: section.content,
@@ -261,11 +335,11 @@ export function LessonContent({ lesson }: LessonContentProps) {
                 <p className="text-md text-gray-600">{lesson.summary}</p>
               </div>
             </div>
-              <div className="text-center">
-                <span className="inline-block bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1 rounded-full ml-2">
-                  Phần {lesson.display_order}
-                </span>
-              </div>
+            <div className="text-center">
+              <span className="inline-block bg-gray-100 text-gray-600 text-sm font-medium px-3 py-1 rounded-full ml-2">
+                Phần {lesson.display_order}
+              </span>
+            </div>
           </div>
         </div>
       </div>

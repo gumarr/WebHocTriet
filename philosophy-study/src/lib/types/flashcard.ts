@@ -6,11 +6,12 @@ export interface Flashcard {
   answer: string;
   category: string;
   difficulty: FlashcardDifficulty;
-  createdAt: Date;
+  created_at: Date;
   lastReviewed?: Date;
-  reviewCount: number;
-  correctCount: number;
-  isMarked: boolean;
+  review_count: number;
+  correct_count: number;
+  is_marked: boolean;
+  lesson_id?: string;
 }
 
 export interface FlashcardProgress {

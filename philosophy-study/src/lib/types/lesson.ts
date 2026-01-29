@@ -1,13 +1,13 @@
 export interface Lesson {
   id: string;
   title: string;
-  chapterId: string;
+  chapter_id: string;
   display_order: number;
   content?: string;
   sections?: Section[];
   summary: string;
-  flashcards: Flashcard[];
-  test: Test;
+  flashcards: LessonFlashcard[];
+  test: LessonTest;
 }
 
 export interface Section {
@@ -20,7 +20,7 @@ export interface Section {
   updatedAt?: Date;
 }
 
-export interface Flashcard {
+export interface LessonFlashcard {
   id: string;
   question: string;
   answer: string;
@@ -33,7 +33,7 @@ export interface Flashcard {
   isMarked: boolean;
 }
 
-export interface Test {
+export interface LessonTest {
   id: string;
   lessonId: string;
   title: string;
