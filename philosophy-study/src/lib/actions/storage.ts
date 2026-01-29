@@ -35,8 +35,8 @@ export async function uploadChapterImage(
     const fileName = `${chapterId}.${extension}`;
 
     // Initialize Supabase admin client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
       return {
@@ -102,8 +102,8 @@ export async function uploadChapterImage(
 export async function deleteChapterImage(chapterId: string): Promise<{ success: boolean; error?: string }> {
   try {
     // Initialize Supabase admin client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
       return {
