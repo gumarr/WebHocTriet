@@ -750,7 +750,27 @@ export const supabaseServices = {
       .single();
 
     if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows returned
-    return data || null;
+    
+    if (!data) return null;
+    
+    // Fetch related lessons for this test with titles
+    const lessonIds = await this.getTestLessons(testId);
+    
+    let relatedLessons: { id: string; title: string }[] = [];
+    if (lessonIds.length > 0) {
+      const { data: lessons, error: lessonsError } = await supabase
+        .from("lessons")
+        .select("id, title")
+        .in("id", lessonIds);
+        
+      if (lessonsError) throw lessonsError;
+      relatedLessons = lessons || [];
+    }
+    
+    return {
+      ...data,
+      related_lessons: relatedLessons,
+    };
   },
 
   async getTestLessons(testId: string): Promise<string[]> {
@@ -852,7 +872,32 @@ export const supabaseServices = {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // For each test, fetch its related lessons with titles
+    const testsWithLessons = await Promise.all(
+      (data || []).map(async (test) => {
+        const lessonIds = await this.getTestLessons(test.id);
+        
+        // Fetch lesson details to get titles
+        let relatedLessons: { id: string; title: string }[] = [];
+        if (lessonIds.length > 0) {
+          const { data: lessons, error: lessonsError } = await supabase
+            .from("lessons")
+            .select("id, title")
+            .in("id", lessonIds);
+            
+          if (lessonsError) throw lessonsError;
+          relatedLessons = lessons || [];
+        }
+        
+        return {
+          ...test,
+          related_lessons: relatedLessons,
+        };
+      })
+    );
+
+    return testsWithLessons;
   },
 
   async deleteTest(testId: string): Promise<void> {

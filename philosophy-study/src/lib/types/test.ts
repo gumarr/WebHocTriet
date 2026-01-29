@@ -6,6 +6,7 @@ export interface Test {
   total_questions: number;
   passing_score: number; // percentage
   questions: TestQuestion[];
+  related_lessons?: { id: string; title: string }[]; // Array of lesson objects with ID and title
   created_at: Date;
   updated_at: Date;
 }

@@ -43,6 +43,11 @@ export default function Navigation() {
       href: "/",
       description: "Tổng quan toàn bộ chương trình triết học",
     },
+    {
+      name: "Bài kiểm tra",
+      href: "/tests",
+      description: "Làm bài kiểm tra đánh giá kiến thức",
+    },
     // {
     //   name: "Bài học",
     //   href: "/lessons",
