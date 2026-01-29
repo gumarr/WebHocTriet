@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import { getChapters } from "@/src/lib/utils/data";
-import { Chapter, Lesson } from "@/src/lib/types/chapter";
+import { Chapter, ChapterLesson } from "@/src/lib/types/chapter";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -44,7 +44,7 @@ export default function AdminPage() {
       (acc, chapter) =>
         acc +
         (chapter.lessons?.reduce(
-          (lessonAcc: number, lesson: Lesson) =>
+          (lessonAcc: number, lesson: ChapterLesson) =>
             lessonAcc + (lesson.flashcards?.length || 0),
           0,
         ) || 0),

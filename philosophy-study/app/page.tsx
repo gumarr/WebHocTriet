@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppContext } from "@/src/lib/context/AppContext";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import { getChapters } from "@/src/lib/utils/data";
-import { Chapter, Lesson } from "@/src/lib/types/chapter";
+import { Chapter, ChapterLesson } from "@/src/lib/types/chapter";
 
 export default function Home() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function Home() {
     // Find the first incomplete chapter
     const incompleteChapter = chapters.find(
       (chapter) =>
-        !chapter.lessons.every((lesson: Lesson) =>
+        !chapter.lessons.every((lesson: ChapterLesson) =>
           userProgress.completedLessons.includes(lesson.id),
         ),
     );
@@ -251,7 +251,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {chapters.map((chapter) => {
               const completedLessons =
-                chapter.lessons?.filter((lesson: Lesson) =>
+                chapter.lessons?.filter((lesson) =>
                   userProgress.completedLessons.includes(lesson.id),
                 ).length || 0;
               const totalLessons = chapter.lessons?.length || 0;
@@ -302,7 +302,7 @@ export default function Home() {
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
                       Các bài học:
                     </h4>
-                    {chapter.lessons?.map((lesson: Lesson) => (
+                    {chapter.lessons?.map((lesson) => (
                       <div
                         key={lesson.id}
                         className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors group"
@@ -444,7 +444,7 @@ export default function Home() {
                   (acc, chapter) =>
                     acc +
                     (chapter.lessons?.reduce(
-                      (lessonAcc: number, lesson: Lesson) =>
+                      (lessonAcc: number, lesson) =>
                         lessonAcc + (lesson.flashcards?.length || 0),
                       0,
                     ) || 0),

@@ -21,27 +21,28 @@ export interface Section {
 }
 
 export interface LessonFlashcard {
+  lesson_id: string;
   id: string;
   question: string;
   answer: string;
   category: string;
   difficulty: "easy" | "medium" | "hard";
-  createdAt: Date;
-  lastReviewed?: Date;
-  reviewCount: number;
-  correctCount: number;
-  isMarked: boolean;
+  created_at: Date;
+  last_reviewed?: Date;
+  review_count: number;
+  correct_count: number;
+  is_marked: boolean;
 }
 
 export interface LessonTest {
   id: string;
-  lessonId: string;
   title: string;
   description: string;
   duration: number;
   totalQuestions: number;
   passingScore: number;
   questions: TestQuestion[];
+  lessonIds: string[];
 }
 
 export interface TestQuestion {

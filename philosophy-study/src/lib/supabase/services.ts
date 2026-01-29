@@ -508,13 +508,13 @@ function mapLessonFromSupabase(data: {
       flashcards: [],
       test: {
         id: "",
-        lessonId: "",
         title: "Bài kiểm tra",
         description: "",
         duration: 0,
         totalQuestions: 0,
         passingScore: 0,
         questions: [],
+        lessonIds: [],
       },
     };
   }
@@ -532,21 +532,31 @@ function mapLessonFromSupabase(data: {
         answer: flashcard.answer,
         category: flashcard.category,
         difficulty: flashcard.difficulty,
-        createdAt: flashcard.created_at,
+        created_at: flashcard.created_at,
         lastReviewed: flashcard.lastReviewed,
-        reviewCount: flashcard.review_count,
-        correctCount: flashcard.correct_count,
-        isMarked: flashcard.is_marked,
+        review_count: flashcard.review_count,
+        correct_count: flashcard.correct_count,
+        is_marked: flashcard.is_marked,
+        lesson_id: data.id,
       })) : [],
-      test: data.test || {
+      test: data.test ? {
+        id: data.test.id,
+        title: data.test.title,
+        description: data.test.description || "",
+        duration: data.test.duration || 0,
+        totalQuestions: data.test.totalQuestions || 0,
+        passingScore: data.test.passingScore || 0,
+        questions: [],
+        lessonIds: [],
+      } : {
         id: "",
-        lessonId: data.id,
         title: "Bài kiểm tra",
         description: "",
         duration: 0,
         totalQuestions: 0,
         passingScore: 0,
         questions: [],
+        lessonIds: [],
       },
     };
 }
@@ -607,7 +617,7 @@ export const supabaseServices = {
   },
 
   // Helper function to map Supabase data to Lesson type
-  mapLessonFromSupabase(data: {
+  async mapLessonFromSupabase(data: {
     id: string;
     title: string;
     chapter_id: string;
@@ -616,7 +626,38 @@ export const supabaseServices = {
     summary: string;
     flashcards?: Flashcard[];
     test?: Test;
-  }): Lesson {
+  }): Promise<Lesson> {
+    // If test exists, fetch its lesson IDs to create a proper LessonTest object
+    let lessonTest = {
+      id: "",
+      title: "Bài kiểm tra",
+      description: "",
+      duration: 0,
+      totalQuestions: 0,
+      passingScore: 0,
+      questions: [] as TestQuestion[],
+      lessonIds: [] as string[],
+    };
+
+    if (data.test) {
+      try {
+        const lessonIds = await this.getTestLessons(data.test.id);
+        lessonTest = {
+          id: data.test.id,
+          title: data.test.title,
+          description: data.test.description || "",
+          duration: data.test.duration || 0,
+          totalQuestions: data.test.totalQuestions || 0,
+          passingScore: data.test.passingScore || 0,
+          questions: [],
+          lessonIds: lessonIds || [],
+        };
+      } catch (error) {
+        console.error("Error fetching test lesson IDs:", error);
+        // Use default test object if fetching fails
+      }
+    }
+
     return {
       id: data.id,
       title: data.title,
@@ -625,27 +666,19 @@ export const supabaseServices = {
       content: data.content,
       summary: data.summary,
       flashcards: data.flashcards ? data.flashcards.map(flashcard => ({
+        lesson_id: data.id, // Add the missing lesson_id property
         id: flashcard.id,
         question: flashcard.question,
         answer: flashcard.answer,
         category: flashcard.category,
         difficulty: flashcard.difficulty,
-        createdAt: flashcard.created_at,
-        lastReviewed: flashcard.lastReviewed,
-        reviewCount: flashcard.review_count,
-        correctCount: flashcard.correct_count,
-        isMarked: flashcard.is_marked,
+        created_at: flashcard.created_at,
+        last_reviewed: flashcard.lastReviewed,
+        review_count: flashcard.review_count,
+        correct_count: flashcard.correct_count,
+        is_marked: flashcard.is_marked,
       })) : [],
-      test: data.test || {
-        id: "",
-        lessonId: data.id,
-        title: "Bài kiểm tra",
-        description: "",
-        duration: 0,
-        totalQuestions: 0,
-        passingScore: 0,
-        questions: [],
-      },
+      test: lessonTest,
     };
   },
 
@@ -694,6 +727,104 @@ export const supabaseServices = {
     return data || null;
   },
 
+  async getTestById(testId: string): Promise<Test | null> {
+    const { data, error } = await supabase
+      .from("tests")
+      .select("*")
+      .eq("id", testId)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows returned
+    return data || null;
+  },
+
+  async getTestWithLessonIds(testId: string): Promise<Test | null> {
+    const { data, error } = await supabase
+      .from("tests")
+      .select("*")
+      .eq("id", testId)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows returned
+    return data || null;
+  },
+
+  async getTestLessons(testId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from("test_lessons")
+      .select("lesson_id")
+      .eq("test_id", testId);
+
+    if (error) throw error;
+    return data ? data.map(row => row.lesson_id) : [];
+  },
+
+  async createTest(testData: {
+    title: string;
+    description: string;
+    duration: number;
+    passing_score: number;
+    total_questions: number;
+  }): Promise<Test> {
+    const { data, error } = await supabase
+      .from("tests")
+      .insert([
+        {
+          ...testData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ])
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateTest(
+    id: string,
+    updates: Partial<Test>,
+  ): Promise<Test> {
+    const { data, error } = await supabase
+      .from("tests")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createTestLessons(testId: string, lessonIds: string[]): Promise<void> {
+    // Delete existing test_lessons for this test
+    const { error: deleteError } = await supabase
+      .from("test_lessons")
+      .delete()
+      .eq("test_id", testId);
+
+    if (deleteError) throw deleteError;
+
+    // Insert new test_lessons
+    if (lessonIds.length > 0) {
+      const testLessonsData = lessonIds.map((lessonId) => ({
+        test_id: testId,
+        lesson_id: lessonId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+
+      const { error: insertError } = await supabase
+        .from("test_lessons")
+        .insert(testLessonsData);
+
+      if (insertError) throw insertError;
+    }
+  },
+
   async getTestQuestionsByTestId(testId: string): Promise<TestQuestion[]> {
     const { data, error } = await supabase
       .from("test_questions")
@@ -702,6 +833,43 @@ export const supabaseServices = {
 
     if (error) throw error;
     return data || [];
+  },
+
+  async getAllTests(): Promise<Test[]> {
+    const { data, error } = await supabase
+      .from("tests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async deleteTest(testId: string): Promise<void> {
+    // First delete related test questions
+    const { error: questionsError } = await supabase
+      .from("test_questions")
+      .delete()
+      .eq("test_id", testId);
+
+    if (questionsError) throw questionsError;
+
+    // Then delete the test
+    const { error: testError } = await supabase
+      .from("tests")
+      .delete()
+      .eq("id", testId);
+
+    if (testError) throw testError;
+  },
+
+
+  async createTestQuestions(questionsData: TestQuestion[]): Promise<void> {
+    const { error } = await supabase
+      .from("test_questions")
+      .insert(questionsData);
+
+    if (error) throw error;
   },
 
   // Lesson Completion

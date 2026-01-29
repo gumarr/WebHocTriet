@@ -43,18 +43,20 @@ export default function AdminChapterLessonsPage() {
       setLessons(
         data.map((lesson) => ({
           ...lesson,
-          flashcards: lesson.flashcards?.map((fc) => ({
-            id: fc.id,
-            question: fc.question,
-            answer: fc.answer,
-            category: fc.category,
-            difficulty: fc.difficulty,
-            createdAt: fc.created_at,
-            lastReviewed: fc.lastReviewed,
-            reviewCount: fc.review_count,
-            correctCount: fc.correct_count,
-            isMarked: fc.is_marked,
-          })) || [],
+          flashcards:
+            lesson.flashcards?.map((fc) => ({
+              lesson_id: lesson.id,
+              id: fc.id,
+              question: fc.question,
+              answer: fc.answer,
+              category: fc.category,
+              difficulty: fc.difficulty,
+              created_at: fc.created_at,
+              last_reviewed: fc.last_reviewed,
+              review_count: fc.review_count,
+              correct_count: fc.correct_count,
+              is_marked: fc.is_marked,
+            })) || [],
         })),
       );
     } catch (error) {
@@ -108,20 +110,22 @@ export default function AdminChapterLessonsPage() {
         setLessons(
           lessons.map((lesson) =>
             lesson.id === editingLesson.id
-              ? { 
+              ? {
                   ...updatedLesson,
-                  flashcards: updatedLesson.flashcards?.map((fc) => ({
-                    id: fc.id,
-                    question: fc.question,
-                    answer: fc.answer,
-                    category: fc.category,
-                    difficulty: fc.difficulty,
-                    createdAt: fc.created_at,
-                    lastReviewed: fc.lastReviewed,
-                    reviewCount: fc.review_count,
-                    correctCount: fc.correct_count,
-                    isMarked: fc.is_marked,
-                  })) || [],
+                  flashcards:
+                    updatedLesson.flashcards?.map((fc) => ({
+                      lesson_id: lesson.id,
+                      id: fc.id,
+                      question: fc.question,
+                      answer: fc.answer,
+                      category: fc.category,
+                      difficulty: fc.difficulty,
+                      created_at: fc.created_at,
+                      last_reviewed: fc.last_reviewed,
+                      review_count: fc.review_count,
+                      correct_count: fc.correct_count,
+                      is_marked: fc.is_marked,
+                    })) || [],
                 }
               : lesson,
           ),
@@ -137,20 +141,22 @@ export default function AdminChapterLessonsPage() {
         });
         setLessons([
           ...lessons,
-          { 
+          {
             ...newLesson,
-            flashcards: newLesson.flashcards?.map((fc) => ({
-              id: fc.id,
-              question: fc.question,
-              answer: fc.answer,
-              category: fc.category,
-              difficulty: fc.difficulty,
-              createdAt: fc.created_at,
-              lastReviewed: fc.lastReviewed,
-              reviewCount: fc.review_count,
-              correctCount: fc.correct_count,
-              isMarked: fc.is_marked,
-            })) || [],
+            flashcards:
+              newLesson.flashcards?.map((fc) => ({
+                lesson_id: newLesson.id,
+                id: fc.id,
+                question: fc.question,
+                answer: fc.answer,
+                category: fc.category,
+                difficulty: fc.difficulty,
+                created_at: fc.created_at,
+                last_reviewed: fc.last_reviewed,
+                review_count: fc.review_count,
+                correct_count: fc.correct_count,
+                is_marked: fc.is_marked,
+              })) || [],
           },
         ]);
       }

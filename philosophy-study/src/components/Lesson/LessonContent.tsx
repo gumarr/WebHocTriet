@@ -41,13 +41,13 @@ export function LessonContent({ lesson }: LessonContentProps) {
     flashcards: [],
     test: {
       id: "",
-      lessonId: lesson.id,
       title: "Bài kiểm tra",
       description: "",
       duration: 0,
       totalQuestions: 0,
       passingScore: 0,
       questions: [],
+      lessonIds: [],
     },
   });
   const { userProgress } = useAppContext();
@@ -77,11 +77,12 @@ export function LessonContent({ lesson }: LessonContentProps) {
         answer: flashcard.answer,
         category: flashcard.category,
         difficulty: flashcard.difficulty,
-        createdAt: flashcard.created_at,
+        created_at: flashcard.created_at,
         lastReviewed: flashcard.lastReviewed,
-        reviewCount: flashcard.review_count,
-        correctCount: flashcard.correct_count,
-        isMarked: flashcard.is_marked,
+        review_count: flashcard.review_count,
+        correct_count: flashcard.correct_count,
+        is_marked: flashcard.is_marked,
+        lesson_id: lesson.id,
       }));
 
       // Fetch test for this lesson
@@ -103,15 +104,24 @@ export function LessonContent({ lesson }: LessonContentProps) {
       setLessonData({
         ...lesson,
         flashcards: flashcards || [],
-        test: testWithQuestions || {
+        test: testWithQuestions ? {
+          id: testWithQuestions.id,
+          title: testWithQuestions.title,
+          description: testWithQuestions.description || "",
+          duration: testWithQuestions.duration || 0,
+          totalQuestions: testWithQuestions.totalQuestions || 0,
+          passingScore: testWithQuestions.passingScore || 0,
+          questions: testWithQuestions.questions || [],
+          lessonIds: [],
+        } : {
           id: "",
-          lessonId: lesson.id,
           title: "Bài kiểm tra",
           description: "",
           duration: 0,
           totalQuestions: 0,
           passingScore: 0,
           questions: [],
+          lessonIds: [],
         },
       });
     } catch (error) {
@@ -122,13 +132,13 @@ export function LessonContent({ lesson }: LessonContentProps) {
         flashcards: [],
         test: {
           id: "",
-          lessonId: lesson.id,
           title: "Bài kiểm tra",
           description: "",
           duration: 0,
           totalQuestions: 0,
           passingScore: 0,
           questions: [],
+          lessonIds: [],
         },
       });
     }
@@ -207,21 +217,22 @@ export function LessonContent({ lesson }: LessonContentProps) {
                 answer: fc.answer,
                 category: fc.category,
                 difficulty: fc.difficulty,
-                createdAt: fc.created_at,
+                created_at: fc.created_at,
                 lastReviewed: fc.lastReviewed || undefined,
-                reviewCount: fc.review_count,
-                correctCount: fc.correct_count,
-                isMarked: fc.is_marked,
+                review_count: fc.review_count,
+                correct_count: fc.correct_count,
+                is_marked: fc.is_marked,
+                lesson_id: chapterLesson.id,
               })) || [],
             test: {
               id: "",
-              lessonId: chapterLesson.id,
               title: "",
               description: "",
               duration: 0,
               totalQuestions: 0,
               passingScore: 0,
               questions: [],
+              lessonIds: [],
             },
           };
         };

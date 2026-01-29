@@ -1,12 +1,22 @@
 export interface Test {
   id: string;
-  lessonId: string;
   title: string;
   description: string;
   duration: number; // in minutes
   totalQuestions: number;
   passingScore: number; // percentage
   questions: TestQuestion[];
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface TestLesson {
+  id: string;
+  test_id: string;
+  lesson_id: string;
+  display_order: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface TestQuestion {
@@ -15,7 +25,7 @@ export interface TestQuestion {
   options: string[];
   correct_answer: number;
   explanation: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   category: string;
 }
 
