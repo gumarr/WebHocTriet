@@ -1,17 +1,17 @@
 import { getChapters } from "@/src/lib/utils/data";
 import Image from "next/image";
 import Link from "next/link";
+import { Chapter } from "@/src/lib/types/chapter";
 
 // Force dynamic rendering to avoid build-time data fetching issues
 export const dynamic = 'force-dynamic';
 
 export default async function StoryPage() {
-  let chapters;
+  let chapters: Chapter[] = [];
   try {
     chapters = await getChapters();
   } catch (error) {
     console.error('Failed to fetch chapters:', error);
-    chapters = [];
   }
 
   return (
