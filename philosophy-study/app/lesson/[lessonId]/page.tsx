@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAppContext } from "@/lib/context/AppContext";
-import { getLessonById } from "@/lib/utils/data";
-import { Lesson } from "@/lib/types/lesson";
-import { LessonContent } from "@/components/Lesson/LessonContent";
+import { useAppContext } from "@/src/lib/context/AppContext";
+import { getLessonById } from "@/src/lib/utils/data";
+import { Lesson } from "@/src/lib/types/lesson";
+import { LessonContent } from "@/src/components/Lesson/LessonContent";
 
 export default function LessonDetail() {
   const router = useRouter();
