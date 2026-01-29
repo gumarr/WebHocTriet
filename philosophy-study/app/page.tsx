@@ -264,7 +264,7 @@ export default function Home() {
               return (
                 <div
                   key={chapter.id}
-                  className="philosophy-card p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                  className="philosophy-card p-6 shadow-lg transition-all duration-300 cursor-pointer group"
                   onClick={() =>
                     router.push(`/lesson/${chapter.lessons?.[0]?.id || ""}`)
                   }
@@ -339,7 +339,7 @@ export default function Home() {
 
                   {/* Action Button */}
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <button className="w-full philosophy-button py-2 text-center text-sm font-medium group-hover:bg-emerald-600 transition-colors">
+                    <button className="w-full philosophy-button py-2 text-center text-sm font-medium bg-emerald-600 hover:scale-105 transition">
                       Khám phá chương
                     </button>
                   </div>
