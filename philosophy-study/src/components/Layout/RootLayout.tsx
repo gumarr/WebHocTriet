@@ -19,15 +19,14 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
-        <title>Triết Học Mác - Lênin</title>
+        <title>The Agora</title>
         <meta
           name="description"
           content="Hệ thống ôn tập triết học Mác - Lênin"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+      <body className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
         <AppProvider>
           <div className="philosophy-theme min-h-screen">
             <Navigation />

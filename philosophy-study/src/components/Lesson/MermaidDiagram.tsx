@@ -69,8 +69,9 @@ export const MermaidDiagram: React.FC<MermaidDiagramProps> = ({
         const { svg, bindFunctions } = await mermaid.render(id, content);
         
         // Set the SVG content
-        containerRef.current.innerHTML = svg;
-        
+        if (containerRef.current) {
+          containerRef.current.innerHTML = svg;
+        }
         // Bind any interactive functions if they exist
         if (bindFunctions) {
           bindFunctions(containerRef.current);
