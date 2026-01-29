@@ -169,7 +169,7 @@ export default function CreateTestPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
@@ -179,7 +179,7 @@ export default function CreateTestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* Admin Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">
@@ -211,7 +211,7 @@ export default function CreateTestPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Test Info Form */}
-          <div className="lg:col-span-1 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
+          <div className="lg:col-span-1 bg-linear-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
             <div className="philosophy-card p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">
                 Thông tin Bài Test
@@ -352,7 +352,7 @@ export default function CreateTestPage() {
           </div>
 
           {/* Questions Form */}
-          <div className="lg:col-span-2 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
+          <div className="lg:col-span-2 bg-linear-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
             <div className="philosophy-card p-8">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">Câu hỏi</h3>

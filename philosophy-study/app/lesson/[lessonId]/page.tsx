@@ -132,7 +132,7 @@ export default function LessonDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       <div className="container mx-auto px-4 py-4">
         {/* Header */}
         <div className="philosophy-card p-6 mb-2">

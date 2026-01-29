@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "../../src/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,7 +32,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -39,11 +40,15 @@ export default function LoginPage() {
         className="w-full max-w-md bg-white rounded-2xl p-8 shadow-xl border border-gray-200"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <span className="text-white text-2xl font-bold">TL</span>
-          </div>
+          <Image 
+            src="/images/MLNLOGO.jpg" 
+            alt="Triết Học Mác - Lênin Logo"
+            width={64}
+            height={64}
+            className="w-16 h-16 rounded-full mx-auto mb-4 shadow-lg object-cover"
+          />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Triết Học Mác - Lênin
+            The Agora
           </h1>
           <p className="text-gray-600">Đăng nhập để quản lý nội dung</p>
         </div>
@@ -96,7 +101,7 @@ export default function LoginPage() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="w-full bg-linear-to-r from-emerald-500 to-emerald-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {isLoading ? "Đang đăng nhập..." : "Đăng nhập Admin"}
           </motion.button>

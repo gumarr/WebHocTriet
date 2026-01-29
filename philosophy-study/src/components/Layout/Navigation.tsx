@@ -78,14 +78,13 @@ export default function Navigation() {
               onClick={() => router.push("/")}
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm">TL</span>
-              </div>
+              <img
+                src="/images/MLNLOGO.jpg"
+                alt="Triết Học Mác - Lênin Logo"
+                className="w-10 h-10 rounded-lg shadow-lg object-cover"
+              />
               <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-900">
-                  Triết Học Mác - Lênin
-                </h1>
-                <p className="text-xs text-gray-600">Hệ thống ôn tập</p>
+                <h1 className="text-xl font-bold text-gray-900">The Agora</h1>
               </div>
             </button>
           </div>

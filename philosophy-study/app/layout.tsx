@@ -18,6 +18,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "The Agora",
   description: "Place where philosophy debate",
+  icons: {
+    icon: "/images/MLNLOGO.jpg",
+    shortcut: "/images/MLNLOGO.jpg",
+  },
 };
 
 export default function RootLayout({

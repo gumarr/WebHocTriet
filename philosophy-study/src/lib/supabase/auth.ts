@@ -54,18 +54,12 @@ export const authServices = {
         .single();
 
       if (profileError) {
-        console.log("❌ Error details:", {
-          code: profileError.code,
-          message: profileError.message,
-          details: profileError.details,
-        });
+        
         return null;
       }
 
       if (profileData?.role) {
         return profileData.role;
-      } else {
-        console.log("⚠️  No role found in regular profiles query");
       }
 
       return null;

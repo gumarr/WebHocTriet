@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import { supabaseServices } from "@/src/lib/supabase/services";
-import { Test, TestQuestion } from "@/src/lib/types/test";
-import { Lesson } from "@/src/lib/types/lesson";
+import { Test } from "@/src/lib/types/test";
 
 export default function AdminTestsPage() {
   const router = useRouter();
@@ -16,6 +15,40 @@ export default function AdminTestsPage() {
   const [lessonTitles, setLessonTitles] = useState<Record<string, string[]>>(
     {},
   );
+  const [chapterTitles, setChapterTitles] = useState<Record<string, string>>(
+    {},
+  );
+
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLesson, setSelectedLesson] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"created_at" | "updated_at">(
+    "created_at",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Filter and sort tests
+  const filteredTests = tests
+    .filter((test) => {
+      // Filter by search term
+      const matchesSearch =
+        test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (test.description &&
+          test.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      // Filter by lesson
+      const matchesLesson =
+        !selectedLesson ||
+        (lessonTitles[test.id] &&
+          lessonTitles[test.id].includes(selectedLesson));
+
+      return matchesSearch && matchesLesson;
+    })
+    .sort((a, b) => {
+      const aValue = new Date(a[sortBy]).getTime();
+      const bValue = new Date(b[sortBy]).getTime();
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+    });
 
   // Load tests data
   useEffect(() => {
@@ -31,7 +64,9 @@ export default function AdminTestsPage() {
           const lessonIds = await supabaseServices.getTestLessons(test.id);
           if (lessonIds && lessonIds.length > 0) {
             const titles = await getLessonTitles(lessonIds);
-            titlesMap[test.id] = titles;
+            // Remove duplicates using Set
+            const uniqueTitles = [...new Set(titles)];
+            titlesMap[test.id] = uniqueTitles;
           }
         }
         setLessonTitles(titlesMap);
@@ -43,6 +78,23 @@ export default function AdminTestsPage() {
       }
     };
     loadTests();
+  }, []);
+
+  // Load chapters for filter dropdown
+  useEffect(() => {
+    const loadChapters = async () => {
+      try {
+        const chapters = await supabaseServices.getChapters();
+        const chapterMap: Record<string, string> = {};
+        chapters.forEach((chapter) => {
+          chapterMap[chapter.id] = chapter.title;
+        });
+        setChapterTitles(chapterMap);
+      } catch (error) {
+        console.error("Error loading chapters:", error);
+      }
+    };
+    loadChapters();
   }, []);
 
   // Function to get lesson titles from lesson IDs
@@ -66,7 +118,6 @@ export default function AdminTestsPage() {
   // Redirect to login if not admin
   useEffect(() => {
     if (!isLoading && !isAdmin) {
-      console.log("Redirecting to login - not admin");
       router.push("/login");
     }
   }, [isAdmin, isLoading, router]);
@@ -89,13 +140,9 @@ export default function AdminTestsPage() {
     router.push(`/admin/tests/${testId}/edit`);
   };
 
-  const handleViewQuestions = (testId: string) => {
-    router.push(`/admin/tests/${testId}/questions`);
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
@@ -105,7 +152,7 @@ export default function AdminTestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* Admin Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">
@@ -119,6 +166,12 @@ export default function AdminTestsPage() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push("/admin")}
+                className="px-4 py-2 text-sm text-gray-700 hover:text-emerald-600 transition-colors border border-gray-300 rounded-lg"
+              >
+                Quay về Admin
+              </button>
               <button
                 onClick={() => router.push("/admin/tests/new")}
                 className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-300"
@@ -153,20 +206,94 @@ export default function AdminTestsPage() {
           </div>
         </div>
 
+        {/* Search and Filter Controls */}
+        <div className="philosophy-card p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search by name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tìm kiếm theo tên
+              </label>
+              <input
+                type="text"
+                placeholder="Nhập tên bài test..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+              />
+            </div>
+
+            {/* Filter by lesson */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Lọc theo bài học
+              </label>
+              <select
+                value={selectedLesson}
+                onChange={(e) => setSelectedLesson(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+              >
+                <option value="">Tất cả các bài học</option>
+                {Array.from(new Set(Object.values(lessonTitles).flat())).map(
+                  (title, index) => (
+                    <option key={index} value={title}>
+                      {title}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+
+            {/* Sort options */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sắp xếp theo
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) =>
+                    setSortBy(e.target.value as "created_at" | "updated_at")
+                  }
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                >
+                  <option value="created_at">Ngày tạo</option>
+                  <option value="updated_at">Ngày cập nhật</option>
+                </select>
+                <select
+                  value={sortOrder}
+                  onChange={(e) =>
+                    setSortOrder(e.target.value as "asc" | "desc")
+                  }
+                  className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
+                >
+                  <option value="desc">Giảm dần</option>
+                  <option value="asc">Tăng dần</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Tests List */}
         <div className="philosophy-card p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">
-            Danh sách Bài Test
-          </h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900">
+              Danh sách Bài Test
+            </h3>
+            <div className="text-sm text-gray-600">
+              {filteredTests.length} bài test được tìm thấy
+            </div>
+          </div>
 
-          {tests.length === 0 ? (
+          {filteredTests.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📝</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Chưa có bài test nào
+                Không tìm thấy bài test nào
               </h3>
               <p className="text-gray-600 mb-6">
-                Hãy tạo bài test đầu tiên để bắt đầu quản lý nội dung đánh giá
+                Hãy thử thay đổi các bộ lọc hoặc tạo bài test mới
               </p>
               <button
                 onClick={() => router.push("/admin/tests/new")}
@@ -177,7 +304,7 @@ export default function AdminTestsPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {tests.map((test) => (
+              {filteredTests.map((test) => (
                 <div
                   key={test.id}
                   className="philosophy-card p-6 border border-gray-200 hover:shadow-lg transition-all duration-300"
@@ -193,8 +320,8 @@ export default function AdminTestsPage() {
                           📚 {lessonTitles[test.id]?.length || 0} bài học
                         </span>
                         <span>⏱️ {test.duration} phút</span>
-                        <span>❓ {test.totalQuestions} câu</span>
-                        <span>🎯 {test.passingScore}% đạt</span>
+                        <span>❓ {test.total_questions} câu</span>
+                        <span>🎯 {test.passing_score}% đạt</span>
                       </div>
                       {lessonTitles[test.id] &&
                         lessonTitles[test.id].length > 0 && (
@@ -216,12 +343,6 @@ export default function AdminTestsPage() {
                         )}
                     </div>
                     <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => handleViewQuestions(test.id)}
-                        className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-medium hover:bg-blue-200 transition-colors"
-                      >
-                        Xem câu hỏi
-                      </button>
                       <button
                         onClick={() => handleEditTest(test.id)}
                         className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-lg font-medium hover:bg-yellow-200 transition-colors"

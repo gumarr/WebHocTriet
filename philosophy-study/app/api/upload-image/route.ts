@@ -88,7 +88,6 @@ export async function POST(request: NextRequest) {
               .map(file => file.name);
             
             if (filesToDelete.length > 0) {
-              console.log(`Found ${filesToDelete.length} files to delete for chapter ${chapterId}:`, filesToDelete);
               
               // Delete existing files for this chapter
               const { error: deleteError } = await supabaseAdmin.storage
@@ -97,11 +96,7 @@ export async function POST(request: NextRequest) {
 
               if (deleteError) {
                 console.warn("Error deleting existing files:", deleteError);
-              } else {
-                console.log(`Successfully deleted ${filesToDelete.length} existing files for chapter ${chapterId}`);
               }
-            } else {
-              console.log(`No existing files found for chapter ${chapterId}`);
             }
           }
         } catch (deleteError) {
@@ -113,13 +108,6 @@ export async function POST(request: NextRequest) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      console.log("File details:", {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        fileName: fileName
-      });
-
       // Upload to Supabase storage with proper content type
       const { data, error } = await supabaseAdmin.storage
         .from("chapter-image")
@@ -129,18 +117,12 @@ export async function POST(request: NextRequest) {
           contentType: file.type,
         });
 
-      console.log("Upload result:", { data, error });
 
       if (error) {
         console.error("Upload error details:", error);
         throw error;
       }
 
-      console.log("Upload successful:", {
-        fileName,
-        path: data?.path,
-        fullPath: data?.fullPath
-      });
 
       // Get the public URL
       const { data: publicUrlData } = supabaseAdmin.storage
@@ -235,7 +217,6 @@ export async function POST(request: NextRequest) {
               .map(file => file.name);
             
             if (filesToDelete.length > 0) {
-              console.log(`Found ${filesToDelete.length} files to delete for chapter ${chapterId}:`, filesToDelete);
               
               // Delete existing files for this chapter
               const { error: deleteError } = await supabaseAdmin.storage
@@ -244,11 +225,7 @@ export async function POST(request: NextRequest) {
 
               if (deleteError) {
                 console.warn("Error deleting existing files:", deleteError);
-              } else {
-                console.log(`Successfully deleted ${filesToDelete.length} existing files for chapter ${chapterId}`);
               }
-            } else {
-              console.log(`No existing files found for chapter ${chapterId}`);
             }
           }
         } catch (deleteError) {
@@ -268,12 +245,6 @@ export async function POST(request: NextRequest) {
         console.error("Upload error details:", error);
         throw error;
       }
-
-      console.log("Upload successful:", {
-        fileName,
-        path: data?.path,
-        fullPath: data?.fullPath
-      });
 
       // Get the public URL
       const { data: publicUrlData } = supabaseAdmin.storage

@@ -57,11 +57,7 @@ function ContentPreview({ content }: { content: string }) {
       >
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          rehypePlugins={[
-            rehypeRaw,
-            rehypeSlug,
-            rehypeAutolinkHeadings,
-          ]}
+          rehypePlugins={[rehypeRaw, rehypeSlug, rehypeAutolinkHeadings]}
           components={{
             h1: ({ children }) => (
               <AnimatedSection delay={0.2}>
@@ -86,14 +82,10 @@ function ContentPreview({ content }: { content: string }) {
             ),
             p: ({ children }) => (
               <AnimatedSection delay={0.5}>
-                <p className="text-gray-700 leading-relaxed mb-4">
-                  {children}
-                </p>
+                <p className="text-gray-700 leading-relaxed mb-4">{children}</p>
               </AnimatedSection>
             ),
-            ul: ({ children }) => (
-              <AnimatedList>{children}</AnimatedList>
-            ),
+            ul: ({ children }) => <AnimatedList>{children}</AnimatedList>,
             li: ({ children }) => (
               <AnimatedListItem>{children}</AnimatedListItem>
             ),
@@ -110,9 +102,7 @@ function ContentPreview({ content }: { content: string }) {
               </AnimatedSection>
             ),
             strong: ({ children }) => (
-              <span className="font-bold text-indigo-600">
-                {children}
-              </span>
+              <span className="font-bold text-indigo-600">{children}</span>
             ),
             code: ({
               children,
@@ -307,7 +297,7 @@ export default function AdminLessonSectionsPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
@@ -318,7 +308,7 @@ export default function AdminLessonSectionsPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Truy cập bị từ chối
@@ -338,7 +328,7 @@ export default function AdminLessonSectionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* Admin Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">

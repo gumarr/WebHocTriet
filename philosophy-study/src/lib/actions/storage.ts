@@ -136,7 +136,6 @@ export async function deleteChapterImage(chapterId: string): Promise<{ success: 
         .map(file => file.name);
       
       if (filesToDelete.length > 0) {
-        console.log(`Found ${filesToDelete.length} files to delete for chapter ${chapterId}:`, filesToDelete);
         
         // Delete existing files for this chapter
         const { error: deleteError } = await supabaseAdmin.storage

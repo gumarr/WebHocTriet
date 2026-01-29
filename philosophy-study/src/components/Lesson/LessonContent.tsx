@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Lesson, LessonFlashcard, LessonTest } from "../../lib/types/lesson";
 import { Flashcard as SupabaseFlashcard } from "../../lib/types/flashcard";
+import { Test } from "../../lib/types/test";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -30,6 +31,10 @@ export function LessonContent({ lesson }: LessonContentProps) {
   const [activeTab, setActiveTab] = useState<"content" | "flashcards" | "test">(
     "content",
   );
+  const [flashcards, setFlashcards] = useState<LessonFlashcard[]>([]);
+  const [test, setTest] = useState<LessonTest | null>(null);
+  const [availableTests, setAvailableTests] = useState<Test[]>([]);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [showFlashcard, setShowFlashcard] = useState(false);
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<
@@ -85,48 +90,78 @@ export function LessonContent({ lesson }: LessonContentProps) {
         lesson_id: lesson.id,
       }));
 
-      // Fetch test for this lesson
-      const test = await supabaseServices.getTestByLessonId(lesson.id);
+      // Fetch all tests for this lesson
+      const tests = await supabaseServices.getTestByLessonId(lesson.id);
+      setAvailableTests(tests || []);
+
+      // Set selected test if there's a selected test ID, otherwise use the first test
+      let selectedTest = null;
+      if (selectedTestId && tests && tests.length > 0) {
+        selectedTest = tests.find((t) => t.id === selectedTestId) || tests[0];
+      } else if (tests && tests.length > 0) {
+        selectedTest = tests[0];
+      }
 
       // Fetch test questions if test exists
-      let testWithQuestions = test;
-      if (test) {
+      let testWithQuestions = null;
+      if (selectedTest) {
         const testQuestions = await supabaseServices.getTestQuestionsByTestId(
-          test.id,
+          selectedTest.id,
         );
         testWithQuestions = {
-          ...test,
+          ...selectedTest,
           questions: testQuestions,
         };
       }
+
+      // Update local state
+      setFlashcards(flashcards || []);
+      setTest(
+        testWithQuestions
+          ? {
+              id: testWithQuestions.id,
+              title: testWithQuestions.title,
+              description: testWithQuestions.description || "",
+              duration: testWithQuestions.duration || 0,
+              totalQuestions: testWithQuestions.total_questions || 0,
+              passingScore: testWithQuestions.passing_score || 0,
+              questions: testWithQuestions.questions || [],
+              lessonIds: [],
+            }
+          : null,
+      );
 
       // Update lesson data with fetched data
       setLessonData({
         ...lesson,
         flashcards: flashcards || [],
-        test: testWithQuestions ? {
-          id: testWithQuestions.id,
-          title: testWithQuestions.title,
-          description: testWithQuestions.description || "",
-          duration: testWithQuestions.duration || 0,
-          totalQuestions: testWithQuestions.totalQuestions || 0,
-          passingScore: testWithQuestions.passingScore || 0,
-          questions: testWithQuestions.questions || [],
-          lessonIds: [],
-        } : {
-          id: "",
-          title: "Bài kiểm tra",
-          description: "",
-          duration: 0,
-          totalQuestions: 0,
-          passingScore: 0,
-          questions: [],
-          lessonIds: [],
-        },
+        test: testWithQuestions
+          ? {
+              id: testWithQuestions.id,
+              title: testWithQuestions.title,
+              description: testWithQuestions.description || "",
+              duration: testWithQuestions.duration || 0,
+              totalQuestions: testWithQuestions.total_questions || 0,
+              passingScore: testWithQuestions.passing_score || 0,
+              questions: testWithQuestions.questions || [],
+              lessonIds: [],
+            }
+          : {
+              id: "",
+              title: "Bài kiểm tra",
+              description: "",
+              duration: 0,
+              totalQuestions: 0,
+              passingScore: 0,
+              questions: [],
+              lessonIds: [],
+            },
       });
     } catch (error) {
       console.error("Error fetching lesson data:", error);
       // Set empty arrays if fetch fails
+      setFlashcards([]);
+      setTest(null);
       setLessonData({
         ...lesson,
         flashcards: [],
@@ -306,6 +341,14 @@ export function LessonContent({ lesson }: LessonContentProps) {
     setShowResults(true);
   };
 
+  const handleSelectTest = (testId: string) => {
+    setSelectedTestId(testId);
+    setShowResults(false);
+    setSelectedAnswers({});
+    // Fetch the selected test data
+    fetchLessonData();
+  };
+
   // Page-based navigation for content
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -333,7 +376,7 @@ export function LessonContent({ lesson }: LessonContentProps) {
   }, [pages.length, currentPage]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header Section */}
       <div className="bg-white shadow-2xl border-b-4 border-indigo-500">
         <div className="max-w-5xl mx-auto px-6 py-8">
@@ -685,33 +728,6 @@ export function LessonContent({ lesson }: LessonContentProps) {
                     {lessonData.flashcards?.length || 0}
                   </p>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">
-                    Tiến độ:{" "}
-                    {lessonData.flashcards?.length
-                      ? Math.round(
-                          ((currentFlashcardIndex + 1) /
-                            lessonData.flashcards.length) *
-                            100,
-                        )
-                      : 0}
-                    %
-                  </span>
-                  <div className="flex space-x-2">
-                    {lessonData.flashcards?.map((_, index) => (
-                      <div
-                        key={index}
-                        className={`w-3 h-3 rounded-full ${
-                          index === currentFlashcardIndex
-                            ? "bg-indigo-500"
-                            : index < currentFlashcardIndex
-                              ? "bg-green-500"
-                              : "bg-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -719,27 +735,26 @@ export function LessonContent({ lesson }: LessonContentProps) {
             <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100 min-h-64">
               <div className="text-center">
                 <div className="mb-6">
-                  {lessonData.flashcards &&
-                    lessonData.flashcards.length > 0 && (
-                      <>
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                            difficultyColors[
-                              lessonData.flashcards[currentFlashcardIndex]
-                                ?.difficulty || "medium"
-                            ]
-                          }`}
-                        >
-                          {lessonData.flashcards[
-                            currentFlashcardIndex
-                          ]?.difficulty?.toUpperCase() || "MEDIUM"}
-                        </span>
-                        <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full ml-2">
-                          {lessonData.flashcards[currentFlashcardIndex]
-                            ?.category || "General"}
-                        </span>
-                      </>
-                    )}
+                  {flashcards && flashcards.length > 0 && (
+                    <>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                          difficultyColors[
+                            flashcards[currentFlashcardIndex]?.difficulty ||
+                              "medium"
+                          ]
+                        }`}
+                      >
+                        {flashcards[
+                          currentFlashcardIndex
+                        ]?.difficulty?.toUpperCase() || "MEDIUM"}
+                      </span>
+                      <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full ml-2">
+                        {flashcards[currentFlashcardIndex]?.category ||
+                          "General"}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 {/* Flashcard Container with Flip Animation */}
@@ -762,19 +777,20 @@ export function LessonContent({ lesson }: LessonContentProps) {
                     >
                       {/* --- MẶT TRƯỚC (FRONT) --- */}
                       <div
-                        className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200 shadow-lg flex flex-col justify-center items-center"
-                        style={{
-                          backfaceVisibility: "hidden",
-                        }} /* 3. Ẩn mặt sau khi lật */
+                        className="absolute inset-0 w-full h-full bg-linear-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200 shadow-lg flex flex-col justify-center items-center"
+                        style={
+                          {
+                            backfaceVisibility: "hidden",
+                          } as React.CSSProperties
+                        } /* 3. Ẩn mặt sau khi lật */
                       >
                         <h3 className="text-xl font-semibold mb-4 text-gray-800">
                           Câu hỏi:
                         </h3>
                         <p className="text-lg text-gray-700 leading-relaxed text-center">
-                          {lessonData.flashcards &&
-                          lessonData.flashcards.length > 0
-                            ? lessonData.flashcards[currentFlashcardIndex]
-                                ?.question || "Chưa có câu hỏi"
+                          {flashcards && flashcards.length > 0
+                            ? flashcards[currentFlashcardIndex]?.question ||
+                              "Chưa có câu hỏi"
                             : "Chưa có thẻ ghi nhớ"}
                         </p>
                         <div className="absolute bottom-4 right-4 text-xs text-gray-500">
@@ -784,21 +800,22 @@ export function LessonContent({ lesson }: LessonContentProps) {
 
                       {/* --- MẶT SAU (BACK) --- */}
                       <div
-                        className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200 shadow-lg flex flex-col justify-center items-center"
-                        style={{
-                          backfaceVisibility: "hidden",
-                          transform:
-                            "rotateY(180deg)" /* 4. Mặc định úp mặt sau lại 180 độ */,
-                        }}
+                        className="absolute inset-0 w-full h-full bg-linear-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200 shadow-lg flex flex-col justify-center items-center"
+                        style={
+                          {
+                            backfaceVisibility: "hidden",
+                            transform:
+                              "rotateY(180deg)" /* 4. Mặc định úp mặt sau lại 180 độ */,
+                          } as React.CSSProperties
+                        }
                       >
                         <h3 className="text-xl font-semibold mb-4 text-green-800">
                           Trả lời:
                         </h3>
                         <p className="text-lg text-green-700 leading-relaxed text-center">
-                          {lessonData.flashcards &&
-                          lessonData.flashcards.length > 0
-                            ? lessonData.flashcards[currentFlashcardIndex]
-                                ?.answer || "Chưa có câu trả lời"
+                          {flashcards && flashcards.length > 0
+                            ? flashcards[currentFlashcardIndex]?.answer ||
+                              "Chưa có câu trả lời"
                             : "Chưa có thẻ ghi nhớ"}
                         </p>
                         <div className="absolute bottom-4 right-4 text-xs text-green-500">
@@ -826,24 +843,6 @@ export function LessonContent({ lesson }: LessonContentProps) {
                     →
                   </button>
                 </div>
-
-                {/* Progress Indicator */}
-                <div className="mt-6 flex justify-center">
-                  <div className="flex space-x-2">
-                    {lessonData.flashcards?.map((_, index) => (
-                      <div
-                        key={index}
-                        className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                          index === currentFlashcardIndex
-                            ? "bg-indigo-500 scale-125"
-                            : index < currentFlashcardIndex
-                              ? "bg-green-500"
-                              : "bg-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -851,17 +850,17 @@ export function LessonContent({ lesson }: LessonContentProps) {
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
               <h3 className="text-lg font-semibold mb-4">Danh mục:</h3>
               <div className="flex flex-wrap gap-2">
-                {lesson.flashcards && lesson.flashcards.length > 0 ? (
-                  Array.from(
-                    new Set(lesson.flashcards.map((f) => f.category)),
-                  ).map((category) => (
-                    <span
-                      key={category}
-                      className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full"
-                    >
-                      {category}
-                    </span>
-                  ))
+                {flashcards && flashcards.length > 0 ? (
+                  Array.from(new Set(flashcards.map((f) => f.category))).map(
+                    (category) => (
+                      <span
+                        key={category}
+                        className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full"
+                      >
+                        {category}
+                      </span>
+                    ),
+                  )
                 ) : (
                   <span className="text-gray-500 text-sm">
                     Chưa có thẻ ghi nhớ
@@ -876,169 +875,224 @@ export function LessonContent({ lesson }: LessonContentProps) {
         {activeTab === "test" && (
           <div className="space-y-6 animate-in fade-in-0 zoom-in-95 duration-300">
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-              <h2 className="text-2xl font-bold mb-4 ">
+              <h2 className="text-2xl font-bold mb-4">
                 📝
                 <span className="text-indigo-600">Bài Kiểm Tra</span>
               </h2>
               <p className="text-gray-600 mb-6">
-                Hãy trả lời 20 câu hỏi trắc nghiệm để kiểm tra kiến thức của
-                bạn!
+                Hãy chọn một bài kiểm tra để kiểm tra kiến thức của bạn!
               </p>
 
-              <div className="space-y-8">
-                {/* Test Questions */}
-                {lessonData.test &&
-                lessonData.test.questions &&
-                lessonData.test.questions.length > 0 ? (
-                  lessonData.test.questions.map((question, index) => (
-                    <div
-                      key={question.id}
-                      className={`border rounded-lg p-6 ${
-                        showResults &&
-                        selectedAnswers[question.id] !== undefined
-                          ? selectedAnswers[question.id] ===
-                            question.correct_answer
-                            ? "border-green-200 bg-green-50"
-                            : "border-red-200 bg-red-50"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm font-medium text-gray-800">
-                          Câu {index + 1}
-                        </span>
-                        {showResults &&
-                          selectedAnswers[question.id] !== undefined && (
-                            <span
-                              className={`px-2 py-1 rounded text-xs font-medium ${
-                                selectedAnswers[question.id] ===
+              {/* Test List */}
+              {availableTests.length > 0 ? (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Danh sách bài kiểm tra:
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {availableTests.map((testItem) => (
+                      <div
+                        key={testItem.id}
+                        className={`border rounded-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                          selectedTestId === testItem.id
+                            ? "border-indigo-500 bg-indigo-50"
+                            : "border-gray-200 hover:border-indigo-300"
+                        }`}
+                        onClick={() => handleSelectTest(testItem.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-lg font-semibold text-gray-800">
+                            {testItem.title}
+                          </h4>
+                          <span className="text-sm text-gray-600">
+                            {testItem.total_questions} câu
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {testItem.description}
+                        </p>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Thời gian: {testItem.duration} phút</span>
+                          <span>Điểm đậu: {testItem.passing_score}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">📝</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    Chưa có bài kiểm tra
+                  </h3>
+                  <p className="text-gray-600">
+                    Bài kiểm tra đang được chuẩn bị. Vui lòng quay lại sau!
+                  </p>
+                </div>
+              )}
+
+              {/* Selected Test Content */}
+              {test && selectedTestId && (
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">
+                        {test.title}
+                      </h3>
+                      <p className="text-gray-600">{test.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">
+                        Thời gian: {test.duration} phút
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Điểm đậu: {test.passingScore}%
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-8">
+                    {test.questions.map((question, index) => (
+                      <div
+                        key={question.id}
+                        className={`border rounded-lg p-6 ${
+                          showResults &&
+                          selectedAnswers[question.id] !== undefined
+                            ? selectedAnswers[question.id] ===
+                              question.correct_answer
+                              ? "border-green-200 bg-green-50"
+                              : "border-red-200 bg-red-50"
+                            : "border-gray-200"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium text-gray-800">
+                            Câu {index + 1}
+                          </span>
+                          {showResults &&
+                            selectedAnswers[question.id] !== undefined && (
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium ${
+                                  selectedAnswers[question.id] ===
+                                  question.correct_answer
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {selectedAnswers[question.id] ===
                                 question.correct_answer
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
+                                  ? "✅ Đúng"
+                                  : "❌ Sai"}
+                              </span>
+                            )}
+                        </div>
+
+                        <h4 className="text-lg font-semibold mb-4 text-gray-800">
+                          {question.question}
+                        </h4>
+
+                        <div className="space-y-2">
+                          {question.options.map((option, optionIndex) => (
+                            <label
+                              key={optionIndex}
+                              className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg ${
+                                showResults &&
+                                selectedAnswers[question.id] !== undefined &&
+                                optionIndex === question.correct_answer
+                                  ? "bg-green-100 border border-green-200"
+                                  : showResults &&
+                                      selectedAnswers[question.id] !==
+                                        undefined &&
+                                      optionIndex ===
+                                        selectedAnswers[question.id]
+                                    ? "bg-red-100 border border-red-200"
+                                    : "border border-gray-200 hover:bg-gray-50"
                               }`}
                             >
-                              {selectedAnswers[question.id] ===
-                              question.correct_answer
-                                ? "✅ Đúng"
-                                : "❌ Sai"}
-                            </span>
+                              <input
+                                type="radio"
+                                name={question.id}
+                                value={optionIndex}
+                                checked={
+                                  selectedAnswers[question.id] === optionIndex
+                                }
+                                onChange={() =>
+                                  handleTestAnswer(question.id, optionIndex)
+                                }
+                                disabled={showResults}
+                                className="form-radio h-4 w-4 text-indigo-600"
+                              />
+                              <span className="text-gray-700">{option}</span>
+                              {showResults &&
+                                selectedAnswers[question.id] !== undefined &&
+                                optionIndex === question.correct_answer && (
+                                  <span className="ml-auto text-green-600 font-medium">
+                                    ✅ Đáp án đúng
+                                  </span>
+                                )}
+                              {showResults &&
+                                selectedAnswers[question.id] !== undefined &&
+                                optionIndex === selectedAnswers[question.id] &&
+                                optionIndex !== question.correct_answer && (
+                                  <span className="ml-auto text-red-600 font-medium">
+                                    ❌ Bạn chọn
+                                  </span>
+                                )}
+                            </label>
+                          ))}
+                        </div>
+
+                        {showResults &&
+                          selectedAnswers[question.id] !== undefined && (
+                            <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                              <p className="text-sm text-gray-600">
+                                <strong>Giải thích:</strong>{" "}
+                                {question.explanation}
+                              </p>
+                            </div>
                           )}
                       </div>
+                    ))}
 
-                      <h4 className="text-lg font-semibold mb-4 text-gray-800">
-                        {question.question}
-                      </h4>
-
-                      <div className="space-y-2">
-                        {question.options.map((option, optionIndex) => (
-                          <label
-                            key={optionIndex}
-                            className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg ${
-                              showResults &&
-                              selectedAnswers[question.id] !== undefined &&
-                              optionIndex === question.correct_answer
-                                ? "bg-green-100 border border-green-200"
-                                : showResults &&
-                                    selectedAnswers[question.id] !==
-                                      undefined &&
-                                    optionIndex === selectedAnswers[question.id]
-                                  ? "bg-red-100 border border-red-200"
-                                  : "border border-gray-200 hover:bg-gray-50"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={question.id}
-                              value={optionIndex}
-                              checked={
-                                selectedAnswers[question.id] === optionIndex
-                              }
-                              onChange={() =>
-                                handleTestAnswer(question.id, optionIndex)
-                              }
-                              disabled={showResults}
-                              className="form-radio h-4 w-4 text-indigo-600"
-                            />
-                            <span className="text-gray-700">{option}</span>
-                            {showResults &&
-                              selectedAnswers[question.id] !== undefined &&
-                              optionIndex === question.correct_answer && (
-                                <span className="ml-auto text-green-600 font-medium">
-                                  ✅ Đáp án đúng
-                                </span>
-                              )}
-                            {showResults &&
-                              selectedAnswers[question.id] !== undefined &&
-                              optionIndex === selectedAnswers[question.id] &&
-                              optionIndex !== question.correct_answer && (
-                                <span className="ml-auto text-red-600 font-medium">
-                                  ❌ Bạn chọn
-                                </span>
-                              )}
-                          </label>
-                        ))}
+                    {/* Test Header with Score Display */}
+                    {showResults && (
+                      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl p-6 text-center">
+                        <div className="text-4xl mb-2">🎉</div>
+                        <h3 className="text-2xl font-bold mb-2">
+                          Kết quả: {calculateScore()}%
+                        </h3>
+                        <p className="text-indigo-100">
+                          {calculateScore() >= 70
+                            ? "Xuất sắc! Bạn đã hiểu bài rất tốt!"
+                            : "Cần cố gắng hơn nữa!"}
+                        </p>
                       </div>
-
-                      {showResults &&
-                        selectedAnswers[question.id] !== undefined && (
-                          <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                            <p className="text-sm text-gray-600">
-                              <strong>Giải thích:</strong>{" "}
-                              {question.explanation}
-                            </p>
-                          </div>
-                        )}
+                    )}
+                    {/* Action Buttons */}
+                    <div className="flex justify-center space-x-4">
+                      {showResults ? (
+                        <button
+                          onClick={() => {
+                            setShowResults(false);
+                            setSelectedAnswers({});
+                          }}
+                          className="bg-indigo-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-600 transition-colors"
+                        >
+                          Làm lại bài kiểm tra
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleSubmitTest}
+                          disabled={Object.keys(selectedAnswers).length === 0}
+                          className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Nộp bài
+                        </button>
+                      )}
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-4">📝</div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                      Chưa có bài kiểm tra
-                    </h3>
-                    <p className="text-gray-600">
-                      Bài kiểm tra đang được chuẩn bị. Vui lòng quay lại sau!
-                    </p>
                   </div>
-                )}
-
-                {/* Test Header with Score Display */}
-                {showResults && (
-                  <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl p-6 text-center">
-                    <div className="text-4xl mb-2">🎉</div>
-                    <h3 className="text-2xl font-bold mb-2">
-                      Kết quả: {calculateScore()}%
-                    </h3>
-                    <p className="text-indigo-100">
-                      {calculateScore() >= 70
-                        ? "Xuất sắc! Bạn đã hiểu bài rất tốt!"
-                        : "Cần cố gắng hơn nữa!"}
-                    </p>
-                  </div>
-                )}
-                {/* Action Buttons */}
-                <div className="flex justify-center space-x-4">
-                  {showResults ? (
-                    <button
-                      onClick={() => {
-                        setShowResults(false);
-                        setSelectedAnswers({});
-                      }}
-                      className="bg-indigo-500 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-600 transition-colors"
-                    >
-                      Làm lại bài kiểm tra
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSubmitTest}
-                      disabled={Object.keys(selectedAnswers).length === 0}
-                      className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Nộp bài
-                    </button>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}

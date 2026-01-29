@@ -5,14 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import {
   getChaptersWithLessons,
-  getUserFlashcards,
-  createFlashcard,
-  updateFlashcard,
   deleteFlashcard,
 } from "@/src/lib/supabase/services";
 import { supabase } from "@/src/lib/supabase/client";
-import { Flashcard, Chapter, Lesson } from "@/src/lib/types";
-import { log } from "console";
+import { Flashcard, Chapter } from "@/src/lib/types";
 
 export default function AdminFlashcardsPage() {
   const router = useRouter();
@@ -163,7 +159,7 @@ export default function AdminFlashcardsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
@@ -173,7 +169,7 @@ export default function AdminFlashcardsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">
@@ -186,25 +182,33 @@ export default function AdminFlashcardsPage() {
                 Quản lý các thẻ học cho các bài học
               </p>
             </div>
-            <button
-              onClick={() => router.push("/admin/flashcards/new")}
-              className="philosophy-button bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md flex items-center"
-            >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push("/admin")}
+                className="px-4 py-2 text-sm text-gray-700 hover:text-emerald-600 transition-colors border border-gray-300 rounded-lg"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              Thêm Flashcard
-            </button>
+                Quay về Admin
+              </button>
+              <button
+                onClick={() => router.push("/admin/flashcards/new")}
+                className="philosophy-button bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md flex items-center"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Thêm Flashcard
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -384,7 +388,9 @@ export default function AdminFlashcardsPage() {
                     <div className="flex gap-4">
                       <span>Đã xem: {card.review_count}</span>
                       <span>Đúng: {card.correct_count}</span>
-                      <span>Đã đánh dấu: {card.is_marked ? "Có" : "Không"}</span>
+                      <span>
+                        Đã đánh dấu: {card.is_marked ? "Có" : "Không"}
+                      </span>
                     </div>
                   </div>
                 </div>

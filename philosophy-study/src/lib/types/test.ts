@@ -3,8 +3,8 @@ export interface Test {
   title: string;
   description: string;
   duration: number; // in minutes
-  totalQuestions: number;
-  passingScore: number; // percentage
+  total_questions: number;
+  passing_score: number; // percentage
   questions: TestQuestion[];
   created_at: Date;
   updated_at: Date;

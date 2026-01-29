@@ -41,9 +41,7 @@ export async function updateUserProgress(
 }
 
 export async function getUserFlashcards(): Promise<Flashcard[]> {
-  const { data, error } = await supabase
-    .from("flashcards")
-    .select("*");
+  const { data, error } = await supabase.from("flashcards").select("*");
 
   if (error) throw error;
   return data || [];
@@ -518,47 +516,51 @@ function mapLessonFromSupabase(data: {
       },
     };
   }
-  
-    return {
-      id: data.id,
-      title: data.title,
-      chapter_id: data.chapter_id,
-      display_order: data.display_order,
-      content: data.content,
-      summary: data.summary,
-      flashcards: data.flashcards ? data.flashcards.map(flashcard => ({
-        id: flashcard.id,
-        question: flashcard.question,
-        answer: flashcard.answer,
-        category: flashcard.category,
-        difficulty: flashcard.difficulty,
-        created_at: flashcard.created_at,
-        lastReviewed: flashcard.lastReviewed,
-        review_count: flashcard.review_count,
-        correct_count: flashcard.correct_count,
-        is_marked: flashcard.is_marked,
-        lesson_id: data.id,
-      })) : [],
-      test: data.test ? {
-        id: data.test.id,
-        title: data.test.title,
-        description: data.test.description || "",
-        duration: data.test.duration || 0,
-        totalQuestions: data.test.totalQuestions || 0,
-        passingScore: data.test.passingScore || 0,
-        questions: [],
-        lessonIds: [],
-      } : {
-        id: "",
-        title: "Bài kiểm tra",
-        description: "",
-        duration: 0,
-        totalQuestions: 0,
-        passingScore: 0,
-        questions: [],
-        lessonIds: [],
-      },
-    };
+
+  return {
+    id: data.id,
+    title: data.title,
+    chapter_id: data.chapter_id,
+    display_order: data.display_order,
+    content: data.content,
+    summary: data.summary,
+    flashcards: data.flashcards
+      ? data.flashcards.map((flashcard) => ({
+          id: flashcard.id,
+          question: flashcard.question,
+          answer: flashcard.answer,
+          category: flashcard.category,
+          difficulty: flashcard.difficulty,
+          created_at: flashcard.created_at,
+          lastReviewed: flashcard.lastReviewed,
+          review_count: flashcard.review_count,
+          correct_count: flashcard.correct_count,
+          is_marked: flashcard.is_marked,
+          lesson_id: data.id,
+        }))
+      : [],
+    test: data.test
+      ? {
+          id: data.test.id,
+          title: data.test.title,
+          description: data.test.description || "",
+          duration: data.test.duration || 0,
+          totalQuestions: data.test.total_questions || 0,
+          passingScore: data.test.passing_score || 0,
+          questions: [],
+          lessonIds: [],
+        }
+      : {
+          id: "",
+          title: "Bài kiểm tra",
+          description: "",
+          duration: 0,
+          totalQuestions: 0,
+          passingScore: 0,
+          questions: [],
+          lessonIds: [],
+        },
+  };
 }
 
 // Keep the services object for backward compatibility
@@ -584,17 +586,15 @@ export const supabaseServices = {
 
   // Lessons
   async getLessons(): Promise<Lesson[]> {
-    console.log("🔍 Fetching all lessons from Supabase...");
     const { data, error } = await supabase
       .from("lessons")
       .select("*")
       .order("display_order", { ascending: true });
 
     if (error) {
-      console.error("❌ Error fetching lessons:", error);
+      console.error(" Error fetching lessons:", error);
       throw error;
     }
-    console.log(`✅ Found ${data?.length || 0} lessons`);
     return data?.map(mapLessonFromSupabase) || [];
   },
 
@@ -607,10 +607,10 @@ export const supabaseServices = {
 
     if (error) {
       if (error.code === "PGRST116") {
-        console.log(`⚠️  Lesson with ID ${id} not found in Supabase`);
+        console.log(` Lesson with ID ${id} not found in Supabase`);
         return null;
       }
-      console.error("❌ Error fetching lesson by ID:", error);
+      console.error("Error fetching lesson by ID:", error);
       throw error;
     }
     return data ? mapLessonFromSupabase(data) : null;
@@ -647,8 +647,8 @@ export const supabaseServices = {
           title: data.test.title,
           description: data.test.description || "",
           duration: data.test.duration || 0,
-          totalQuestions: data.test.totalQuestions || 0,
-          passingScore: data.test.passingScore || 0,
+          totalQuestions: data.test.total_questions || 0,
+          passingScore: data.test.passing_score || 0,
           questions: [],
           lessonIds: lessonIds || [],
         };
@@ -665,19 +665,21 @@ export const supabaseServices = {
       display_order: data.display_order,
       content: data.content,
       summary: data.summary,
-      flashcards: data.flashcards ? data.flashcards.map(flashcard => ({
-        lesson_id: data.id, // Add the missing lesson_id property
-        id: flashcard.id,
-        question: flashcard.question,
-        answer: flashcard.answer,
-        category: flashcard.category,
-        difficulty: flashcard.difficulty,
-        created_at: flashcard.created_at,
-        last_reviewed: flashcard.lastReviewed,
-        review_count: flashcard.review_count,
-        correct_count: flashcard.correct_count,
-        is_marked: flashcard.is_marked,
-      })) : [],
+      flashcards: data.flashcards
+        ? data.flashcards.map((flashcard) => ({
+            lesson_id: data.id, // Add the missing lesson_id property
+            id: flashcard.id,
+            question: flashcard.question,
+            answer: flashcard.answer,
+            category: flashcard.category,
+            difficulty: flashcard.difficulty,
+            created_at: flashcard.created_at,
+            last_reviewed: flashcard.lastReviewed,
+            review_count: flashcard.review_count,
+            correct_count: flashcard.correct_count,
+            is_marked: flashcard.is_marked,
+          }))
+        : [],
       test: lessonTest,
     };
   },
@@ -716,29 +718,31 @@ export const supabaseServices = {
   },
 
   // Tests
-  async getTestByLessonId(lessonId: string): Promise<Test | null> {
+  async getTestByLessonId(lessonId: string): Promise<Test[] | null> {
+    // First get test IDs from test_lessons table
+    const { data: testLessons, error: testLessonsError } = await supabase
+      .from("test_lessons")
+      .select("test_id")
+      .eq("lesson_id", lessonId);
+
+    if (testLessonsError) throw testLessonsError;
+
+    if (!testLessons || testLessons.length === 0) {
+      return null;
+    }
+
+    // Then get the test details
+    const testIds = testLessons.map((tl) => tl.test_id);
     const { data, error } = await supabase
       .from("tests")
       .select("*")
-      .eq("lesson_id", lessonId)
-      .single();
+      .in("id", testIds);
 
     if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows returned
-    return data || null;
+    return data && data.length > 0 ? data : null;
   },
 
   async getTestById(testId: string): Promise<Test | null> {
-    const { data, error } = await supabase
-      .from("tests")
-      .select("*")
-      .eq("id", testId)
-      .single();
-
-    if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows returned
-    return data || null;
-  },
-
-  async getTestWithLessonIds(testId: string): Promise<Test | null> {
     const { data, error } = await supabase
       .from("tests")
       .select("*")
@@ -756,7 +760,7 @@ export const supabaseServices = {
       .eq("test_id", testId);
 
     if (error) throw error;
-    return data ? data.map(row => row.lesson_id) : [];
+    return data ? data.map((row) => row.lesson_id) : [];
   },
 
   async createTest(testData: {
@@ -782,10 +786,7 @@ export const supabaseServices = {
     return data;
   },
 
-  async updateTest(
-    id: string,
-    updates: Partial<Test>,
-  ): Promise<Test> {
+  async updateTest(id: string, updates: Partial<Test>): Promise<Test> {
     const { data, error } = await supabase
       .from("tests")
       .update({
@@ -832,7 +833,16 @@ export const supabaseServices = {
       .eq("test_id", testId);
 
     if (error) throw error;
-    return data || [];
+
+    return (data || []).map((question) => ({
+      id: question.id,
+      question: question.question,
+      options: question.options,
+      correct_answer: question.correct_answer,
+      explanation: question.explanation,
+      difficulty: question.difficulty,
+      category: question.category,
+    }));
   },
 
   async getAllTests(): Promise<Test[]> {
@@ -862,7 +872,6 @@ export const supabaseServices = {
 
     if (testError) throw testError;
   },
-
 
   async createTestQuestions(questionsData: TestQuestion[]): Promise<void> {
     const { error } = await supabase

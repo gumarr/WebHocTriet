@@ -6,7 +6,7 @@ export default async function StoryPage() {
   const chapters = await getChapters();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800">
+    <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-800">
       {/* Header */}
       <header className="relative py-8 text-center">
         <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
@@ -51,7 +51,7 @@ export default async function StoryPage() {
                   <div className="relative w-full h-64 mb-6 rounded-xl overflow-hidden shadow-lg">
                     {chapter.image_url ? (
                       <Image
-                        src={`${chapter.image_url}?t=${chapter.updated_at ? new Date(chapter.updated_at).getTime() : ''}`}
+                        src={`${chapter.image_url}?t=${chapter.updated_at ? new Date(chapter.updated_at).getTime() : ""}`}
                         alt={chapter.title}
                         fill
                         className="object-cover"
@@ -59,8 +59,10 @@ export default async function StoryPage() {
                         unoptimized
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                        <span className="text-white text-lg font-semibold">No Image</span>
+                      <div className="w-full h-full bg-linear-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                        <span className="text-white text-lg font-semibold">
+                          No Image
+                        </span>
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>

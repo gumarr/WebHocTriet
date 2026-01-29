@@ -5,12 +5,19 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import { getChapters } from "@/src/lib/utils/data";
 import { Chapter, ChapterLesson } from "@/src/lib/types/chapter";
+import { supabaseServices } from "@/src/lib/supabase/services";
 
 export default function AdminPage() {
   const router = useRouter();
   const { user, isAdmin } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalChapters: 0,
+    totalLessons: 0,
+    totalFlashcards: 0,
+    totalTests: 0,
+  });
 
   // Load chapters data
   useEffect(() => {
@@ -30,16 +37,18 @@ export default function AdminPage() {
   // Redirect to login if not admin
   useEffect(() => {
     if (!isLoading && !isAdmin) {
-      console.log("Redirecting to login - not admin");
       router.push("/login");
     }
   }, [isAdmin, isLoading, router]);
 
-  const getStats = () => {
+  const getStats = async () => {
+    // Tính tổng số bài học
     const totalLessons = chapters.reduce(
       (acc, chapter) => acc + (chapter.lessons?.length || 0),
       0,
     );
+
+    // Tính tổng số flashcards
     const totalFlashcards = chapters.reduce(
       (acc, chapter) =>
         acc +
@@ -51,18 +60,34 @@ export default function AdminPage() {
       0,
     );
 
+    // Lấy tổng số bài test từ Supabase
+    let totalTests = 0;
+    try {
+      const tests = await supabaseServices.getAllTests();
+      totalTests = tests.length;
+    } catch (error) {
+      console.error("Error fetching tests count:", error);
+      totalTests = 0;
+    }
+
     return {
       totalChapters: chapters.length,
       totalLessons,
       totalFlashcards,
+      totalTests,
     };
   };
 
-  const stats = getStats();
+  // Cập nhật stats khi chapters thay đổi
+  useEffect(() => {
+    if (chapters.length > 0) {
+      getStats().then(setStats);
+    }
+  }, [chapters]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
@@ -72,7 +97,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* Admin Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">
@@ -102,7 +127,7 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="philosophy-card p-6 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
+          <div className="philosophy-card p-6 bg-linear-to-r from-emerald-500 to-emerald-600 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Chương học</h3>
@@ -114,28 +139,28 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="philosophy-card p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <div className="philosophy-card p-6 bg-linear-to-br from-blue-500 to-blue-600 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Bài học</h3>
-                <p className="text-blue-100">Tổng số bài học</p>
-              </div>
-              <div className="text-right">
-                <div className="text-4xl font-bold">{stats.totalLessons}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="philosophy-card p-6 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Flashcards</h3>
-                <p className="text-purple-100">Tổng số thẻ học</p>
+                <h3 className="text-lg font-semibold mb-2">Thẻ ghi nhớ</h3>
+                <p className="text-blue-100">Tổng số thẻ</p>
               </div>
               <div className="text-right">
                 <div className="text-4xl font-bold">
                   {stats.totalFlashcards}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="philosophy-card p-6 bg-linear-to-r from-purple-500 to-purple-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Bài kiểm tra</h3>
+                <p className="text-purple-100">Tổng số bài kiểm tra</p>
+              </div>
+              <div className="text-right">
+                <div className="text-4xl font-bold">{stats.totalTests}</div>
               </div>
             </div>
           </div>
@@ -257,7 +282,9 @@ export default function AdminPage() {
                 </svg>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-purple-600">0</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {stats.totalTests}
+                </div>
                 <div className="text-sm text-gray-600">Bài test</div>
               </div>
             </div>
@@ -281,31 +308,7 @@ export default function AdminPage() {
           <h3 className="text-2xl font-bold text-gray-900 mb-6">
             Hành động nhanh
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              onClick={() => router.push("/admin/lessons/new")}
-              className="philosophy-card p-4 text-center hover:bg-emerald-50 transition-colors"
-            >
-              <div className="w-12 h-12 bg-emerald-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-              </div>
-              <span className="font-semibold text-gray-900">
-                Thêm bài học mới
-              </span>
-            </button>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               onClick={() => router.push("/admin/flashcards/new")}
               className="philosophy-card p-4 text-center hover:bg-blue-50 transition-colors"

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAppContext } from "@/src/lib/context/AppContext";
 import { useAuth } from "@/src/lib/context/AuthContext";
 import { getChapters } from "@/src/lib/utils/data";
@@ -70,18 +71,20 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       <div className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full mx-auto flex items-center justify-center shadow-lg">
-              <span className="text-white text-2xl font-bold">TL</span>
-            </div>
+            <Image
+              src="/images/MLNLOGO.jpg"
+              alt="Triết Học Mác - Lênin Logo"
+              width={96}
+              height={96}
+              className="w-24 h-24 rounded-full mx-auto shadow-lg object-cover"
+            />
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Triết Học Mác - Lênin
-          </h1>
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">The Agora</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Hệ thống ôn tập triết học Mác - Lênin hiện đại, giúp bạn hiểu sâu
             sắc các khái niệm triết học thông qua sơ đồ tư duy, flashcards và
@@ -276,9 +279,13 @@ export default function Home() {
                         {chapter.description}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform">
-                      {chapter.display_order}
-                    </div>
+                    <Image
+                      src="/images/MLNLOGO.jpg"
+                      alt="Triết Học Mác - Lênin Logo"
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform object-cover"
+                    />
                   </div>
 
                   {/* Progress Bar */}

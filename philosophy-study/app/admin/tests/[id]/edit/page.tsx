@@ -25,7 +25,9 @@ export default function EditTestPage() {
 
   // Questions state
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
-  const [originalQuestions, setOriginalQuestions] = useState<TestQuestion[]>([]);
+  const [originalQuestions, setOriginalQuestions] = useState<TestQuestion[]>(
+    [],
+  );
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -61,12 +63,13 @@ export default function EditTestPage() {
           title: test.title,
           description: test.description,
           duration: test.duration,
-          passingScore: test.passingScore,
-          totalQuestions: test.totalQuestions,
+          passingScore: test.passing_score,
+          totalQuestions: test.total_questions,
         });
 
         // Load test questions
-        const testQuestions = await supabaseServices.getTestQuestionsByTestId(testId);
+        const testQuestions =
+          await supabaseServices.getTestQuestionsByTestId(testId);
         setQuestions(testQuestions);
         setOriginalQuestions(testQuestions);
 
@@ -147,8 +150,8 @@ export default function EditTestPage() {
         title: testData.title,
         description: testData.description,
         duration: testData.duration,
-        passingScore: testData.passingScore,
-        totalQuestions: questions.length,
+        passing_score: testData.passingScore,
+        total_questions: questions.length,
       });
 
       // Update test_lessons relationship
@@ -188,7 +191,7 @@ export default function EditTestPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải...</p>
@@ -198,18 +201,14 @@ export default function EditTestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* Admin Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Sửa Bài Test
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Bài test: {testData.title}
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900">Sửa Bài Test</h1>
+              <p className="text-gray-600 mt-1">Bài test: {testData.title}</p>
             </div>
             <button
               onClick={() => router.push("/admin/tests")}
@@ -230,7 +229,7 @@ export default function EditTestPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Test Info Form */}
-          <div className="lg:col-span-1 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
+          <div className="lg:col-span-1 bg-linear-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
             <div className="philosophy-card p-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-6">
                 Thông tin Bài Test
@@ -371,7 +370,7 @@ export default function EditTestPage() {
           </div>
 
           {/* Questions Form */}
-          <div className="lg:col-span-2 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
+          <div className="lg:col-span-2 bg-linear-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200">
             <div className="philosophy-card p-8">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">Câu hỏi</h3>
@@ -404,7 +403,7 @@ export default function EditTestPage() {
                           }`}
                         >
                           Câu hỏi {index + 1}
-                          {questions[index].question.trim() && (
+                          {questions[index]?.question?.trim() && (
                             <span className="block text-xs text-gray-500 mt-1 truncate">
                               {questions[index].question}
                             </span>
@@ -447,130 +446,134 @@ export default function EditTestPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Nội dung câu hỏi
-                        </label>
-                        <textarea
-                          value={questions[currentPage].question}
-                          onChange={(e) =>
-                            handleQuestionChange(
-                              currentPage,
-                              "question",
-                              e.target.value,
-                            )
-                          }
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-                          required
-                        />
-                      </div>
+                      {questions[currentPage] && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Nội dung câu hỏi
+                            </label>
+                            <textarea
+                              value={questions[currentPage].question}
+                              onChange={(e) =>
+                                handleQuestionChange(
+                                  currentPage,
+                                  "question",
+                                  e.target.value,
+                                )
+                              }
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                              required
+                            />
+                          </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Các lựa chọn
-                        </label>
-                        <div className="space-y-2">
-                          {questions[currentPage].options.map(
-                            (option, oIndex) => (
-                              <div
-                                key={oIndex}
-                                className="flex items-center space-x-3"
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Các lựa chọn
+                            </label>
+                            <div className="space-y-2">
+                              {questions[currentPage].options.map(
+                                (option, oIndex) => (
+                                  <div
+                                    key={oIndex}
+                                    className="flex items-center space-x-3"
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={`correct-answer-${currentPage}`}
+                                      checked={
+                                        questions[currentPage]
+                                          .correct_answer === oIndex
+                                      }
+                                      onChange={() =>
+                                        handleQuestionChange(
+                                          currentPage,
+                                          "correct_answer",
+                                          oIndex,
+                                        )
+                                      }
+                                      className="text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={option}
+                                      onChange={(e) =>
+                                        handleOptionChange(
+                                          currentPage,
+                                          oIndex,
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder={`Lựa chọn ${oIndex + 1}`}
+                                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                                      required
+                                    />
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Độ khó
+                              </label>
+                              <select
+                                value={questions[currentPage].difficulty}
+                                onChange={(e) =>
+                                  handleQuestionChange(
+                                    currentPage,
+                                    "difficulty",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
                               >
-                                <input
-                                  type="radio"
-                                  name={`correct-answer-${currentPage}`}
-                                  checked={
-                                    questions[currentPage].correct_answer ===
-                                    oIndex
-                                  }
-                                  onChange={() =>
-                                    handleQuestionChange(
-                                      currentPage,
-                                      "correct_answer",
-                                      oIndex,
-                                    )
-                                  }
-                                  className="text-purple-600 focus:ring-purple-500"
-                                />
-                                <input
-                                  type="text"
-                                  value={option}
-                                  onChange={(e) =>
-                                    handleOptionChange(
-                                      currentPage,
-                                      oIndex,
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder={`Lựa chọn ${oIndex + 1}`}
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-                                  required
-                                />
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </div>
+                                <option value="easy">Dễ</option>
+                                <option value="medium">Trung bình</option>
+                                <option value="hard">Khó</option>
+                              </select>
+                            </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Độ khó
-                          </label>
-                          <select
-                            value={questions[currentPage].difficulty}
-                            onChange={(e) =>
-                              handleQuestionChange(
-                                currentPage,
-                                "difficulty",
-                                e.target.value,
-                              )
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-                          >
-                            <option value="easy">Dễ</option>
-                            <option value="medium">Trung bình</option>
-                            <option value="hard">Khó</option>
-                          </select>
-                        </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Danh mục
+                              </label>
+                              <input
+                                type="text"
+                                value={questions[currentPage].category}
+                                onChange={(e) =>
+                                  handleQuestionChange(
+                                    currentPage,
+                                    "category",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                              />
+                            </div>
+                          </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Danh mục
-                          </label>
-                          <input
-                            type="text"
-                            value={questions[currentPage].category}
-                            onChange={(e) =>
-                              handleQuestionChange(
-                                currentPage,
-                                "category",
-                                e.target.value,
-                              )
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Giải thích
-                        </label>
-                        <textarea
-                          value={questions[currentPage].explanation}
-                          onChange={(e) =>
-                            handleQuestionChange(
-                              currentPage,
-                              "explanation",
-                              e.target.value,
-                            )
-                          }
-                          rows={2}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
-                        />
-                      </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Giải thích
+                            </label>
+                            <textarea
+                              value={questions[currentPage].explanation}
+                              onChange={(e) =>
+                                handleQuestionChange(
+                                  currentPage,
+                                  "explanation",
+                                  e.target.value,
+                                )
+                              }
+                              rows={2}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800"
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
