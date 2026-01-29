@@ -240,7 +240,7 @@ export const AnimatedMindMap: React.FC<{
   return (
     <AnimatedCard className={`relative overflow-hidden ${className}`}>
       <h3 className="text-lg font-semibold mb-4 text-gray-900">{title}</h3>
-      <div className="relative w-full h-64 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg">
+      <div className="relative w-full h-64 bg-linear-to-br from-indigo-50 to-purple-50 rounded-lg">
         {/* Connections */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none">
           {nodes.map((node) =>

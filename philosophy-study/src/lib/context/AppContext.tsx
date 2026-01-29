@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { storage } from '../utils/storage';
+import { supabaseServices } from '../supabase/services';
 
 interface UserProgress {
   completedLessons: string[];

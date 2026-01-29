@@ -1,14 +1,17 @@
+export type FlashcardDifficulty = "easy" | "medium" | "hard";
+
 export interface Flashcard {
   id: string;
   question: string;
   answer: string;
   category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  createdAt: Date;
+  difficulty: FlashcardDifficulty;
+  created_at: Date;
   lastReviewed?: Date;
-  reviewCount: number;
-  correctCount: number;
-  isMarked: boolean;
+  review_count: number;
+  correct_count: number;
+  is_marked: boolean;
+  lesson_id?: string;
 }
 
 export interface FlashcardProgress {
@@ -19,8 +22,8 @@ export interface FlashcardProgress {
 }
 
 export interface SpacedRepetitionConfig {
-  easyInterval: number;    // days
-  mediumInterval: number;  // days
-  hardInterval: number;    // days
-  maxInterval: number;     // days
+  easyInterval: number; // days
+  mediumInterval: number; // days
+  hardInterval: number; // days
+  maxInterval: number; // days
 }

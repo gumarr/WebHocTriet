@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAppContext } from "@/src/lib/context/AppContext";
-import { getLessonById } from "@/src/lib/utils/data";
+import {
+  getLessonById,
+  getSectionsByLessonId,
+} from "@/src/lib/supabase/services";
 import { Lesson } from "@/src/lib/types/lesson";
 import { LessonContent } from "@/src/components/Lesson/LessonContent";
 
@@ -14,12 +17,57 @@ export default function LessonDetail() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load lesson data
+  // Load lesson data and navigation
   useEffect(() => {
     const loadLesson = async () => {
       try {
-        const data = await getLessonById(params.lessonId as string);
-        setLesson(data);
+        const lessonData = await getLessonById(params.lessonId as string);
+        if (lessonData) {
+          // Get sections for this lesson
+          const sections = await getSectionsByLessonId(lessonData.id);
+
+          // Create lesson data with sections
+          const lessonWithSections: Lesson = {
+            id: lessonData.id,
+            title: lessonData.title,
+            chapter_id: lessonData.chapter_id,
+            display_order: lessonData.display_order,
+            content: lessonData.content,
+            summary: lessonData.summary,
+            flashcards: (lessonData.flashcards || []).map((flashcard) => ({
+              id: flashcard.id,
+              question: flashcard.question,
+              answer: flashcard.answer,
+              category: flashcard.category,
+              difficulty: flashcard.difficulty,
+              created_at: flashcard.created_at,
+              last_reviewed: flashcard.last_reviewed,
+              review_count: flashcard.review_count,
+              correct_count: flashcard.correct_count,
+              is_marked: flashcard.is_marked,
+              lesson_id: flashcard.lesson_id,
+            })),
+            test: lessonData.test || {
+              id: "",
+              lessonId: lessonData.id,
+              title: "Bài kiểm tra",
+              description: "",
+              duration: 0,
+              totalQuestions: 0,
+              passingScore: 0,
+              questions: [],
+            },
+            sections: sections.map((section, index) => ({
+              id: section.id,
+              title: section.title,
+              content: section.content,
+              display_order: section.display_order,
+              lesson_id: section.lesson_id,
+            })),
+          };
+
+          setLesson(lessonWithSections);
+        }
       } catch (error) {
         console.error("Error loading lesson:", error);
       } finally {
@@ -30,10 +78,20 @@ export default function LessonDetail() {
   }, [params.lessonId]);
 
   const handleMarkCompleted = () => {
-    if (lesson && !userProgress.completedLessons.includes(lesson.id)) {
-      updateUserProgress({
-        completedLessons: [...userProgress.completedLessons, lesson.id],
-      });
+    if (lesson) {
+      if (userProgress.completedLessons.includes(lesson.id)) {
+        // Unmark as completed - remove from completed list
+        updateUserProgress({
+          completedLessons: userProgress.completedLessons.filter(
+            (id) => id !== lesson.id,
+          ),
+        });
+      } else {
+        // Mark as completed - add to completed list
+        updateUserProgress({
+          completedLessons: [...userProgress.completedLessons, lesson.id],
+        });
+      }
     }
   };
 
@@ -74,7 +132,7 @@ export default function LessonDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       <div className="container mx-auto px-4 py-4">
         {/* Header */}
         <div className="philosophy-card p-6 mb-2">
