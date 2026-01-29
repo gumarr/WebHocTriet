@@ -1,5 +1,5 @@
-import { getChapters } from '@/lib/utils/data';
-import { Chapter } from '@/lib/types/chapter';
+import { getChapters } from '@/src/lib/utils/data';
+import { Chapter } from '@/src/lib/types/chapter';
 import Image from 'next/image';
 import Link from 'next/link';
 

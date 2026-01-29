@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAppContext } from "@/lib/context/AppContext";
-import { getChapters } from "@/lib/utils/data";
-import { Chapter, Lesson } from "@/lib/types/chapter";
+import { useAppContext } from "@/src/lib/context/AppContext";
+import { getChapters } from "@/src/lib/utils/data";
+import { Chapter, Lesson } from "@/src/lib/types/chapter";
 
 export default function Home() {
   const router = useRouter();
