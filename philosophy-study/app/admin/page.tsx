@@ -301,6 +301,52 @@ export default function AdminPage() {
               <span className="text-2xl text-purple-600">→</span>
             </div>
           </div>
+
+          {/* Manage Documents */}
+          <div
+            className="philosophy-card p-8 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+            onClick={() => router.push("/admin/documents")}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white">
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 12h.01M12 15h.01M12 18h.01"
+                  />
+                </svg>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-orange-600">-</div>
+                <div className="text-sm text-gray-600">Tài liệu</div>
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
+              Quản lý Tài liệu
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Quản lý tài liệu học tập và slide bài giảng
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-orange-600 font-medium">
+                Quản lý ngay
+              </span>
+              <span className="text-2xl text-orange-600">→</span>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}

@@ -187,6 +187,37 @@ export default function Home() {
                 </h3>
                 <p className="text-gray-600">Tạo và quản lý các bài kiểm tra</p>
               </button>
+
+              <button
+                onClick={() => router.push("/documents")}
+                className="philosophy-card p-6 hover:shadow-lg transition-all duration-300 text-center group"
+              >
+                <div className="w-16 h-16 bg-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 12h.01M12 15h.01M12 18h.01"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Tài liệu học tập
+                </h3>
+                <p className="text-gray-600">Xem và tải các tài liệu học tập</p>
+              </button>
             </div>
           </div>
         )}
@@ -350,7 +381,7 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
           <div className="philosophy-card p-6 text-center">
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -424,6 +455,43 @@ export default function Home() {
               Kiểm tra kiến thức thông qua các bài test được thiết kế theo chuẩn
               đánh giá, giúp củng cố và ghi nhớ kiến thức lâu dài.
             </p>
+          </div>
+
+          <div className="philosophy-card p-6 text-center">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-orange-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 12h.01M12 15h.01M12 18h.01"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Tài liệu học tập
+            </h3>
+            <p className="text-gray-600">
+              Truy cập các tài liệu học tập, slide bài giảng và tài liệu tham khảo
+              được phân loại theo chương và loại tài liệu.
+            </p>
+            <button
+              onClick={() => router.push("/documents")}
+              className="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+            >
+              Xem tài liệu
+            </button>
           </div>
         </div>
 

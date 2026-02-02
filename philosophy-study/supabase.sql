@@ -11,6 +11,27 @@ CREATE TABLE public.chapters (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   CONSTRAINT chapters_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.document_lessons (
+  document_id uuid NOT NULL,
+  lesson_id uuid NOT NULL,
+  CONSTRAINT document_lessons_pkey PRIMARY KEY (document_id, lesson_id),
+  CONSTRAINT document_lessons_document_id_fkey FOREIGN KEY (document_id) REFERENCES public.documents(id),
+  CONSTRAINT document_lessons_lesson_id_fkey FOREIGN KEY (lesson_id) REFERENCES public.lessons(id)
+);
+CREATE TABLE public.documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  category USER-DEFINED NOT NULL,
+  description text,
+  source_type text CHECK (source_type = ANY (ARRAY['upload'::text, 'link'::text])),
+  file_path text,
+  file_extension text,
+  external_url text,
+  display_order integer DEFAULT 1,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT documents_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.flashcards (
   question text NOT NULL,
   answer text NOT NULL,
@@ -74,10 +95,10 @@ CREATE TABLE public.test_questions (
   explanation text,
   difficulty text CHECK (difficulty = ANY (ARRAY['easy'::text, 'medium'::text, 'hard'::text])),
   category text,
-  created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   test_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT test_questions_pkey PRIMARY KEY (id),
   CONSTRAINT test_questions_test_id_fkey FOREIGN KEY (test_id) REFERENCES public.tests(id)
 );

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Lesson, LessonFlashcard, LessonTest } from "../../lib/types/lesson";
 import { Flashcard as SupabaseFlashcard } from "../../lib/types/flashcard";
 import { Test } from "../../lib/types/test";
+import { Document } from "../../lib/types/document";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -28,7 +29,7 @@ interface LessonContentProps {
 }
 
 export function LessonContent({ lesson }: LessonContentProps) {
-  const [activeTab, setActiveTab] = useState<"content" | "flashcards" | "test">(
+  const [activeTab, setActiveTab] = useState<"content" | "flashcards" | "test" | "documents">(
     "content",
   );
   const [flashcards, setFlashcards] = useState<LessonFlashcard[]>([]);
@@ -41,6 +42,7 @@ export function LessonContent({ lesson }: LessonContentProps) {
     Record<string, number>
   >({});
   const [showResults, setShowResults] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [lessonData, setLessonData] = useState<Lesson>({
     ...lesson,
     flashcards: [],
@@ -183,8 +185,21 @@ export function LessonContent({ lesson }: LessonContentProps) {
   useEffect(() => {
     if (activeTab === "flashcards" || activeTab === "test") {
       fetchLessonData();
+    } else if (activeTab === "documents") {
+      fetchDocuments();
     }
   }, [activeTab]);
+
+  // Fetch documents for this lesson
+  const fetchDocuments = async () => {
+    try {
+      const docs = await supabaseServices.getDocumentsByLessonId(lesson.id);
+      setDocuments(docs);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      setDocuments([]);
+    }
+  };
 
   // Calculate progress based on learned flashcards
   const calculateProgress = () => {
@@ -296,6 +311,7 @@ export function LessonContent({ lesson }: LessonContentProps) {
     { id: "content", label: " Nội dung", icon: "📚" },
     { id: "flashcards", label: " Flashcards", icon: "🎴" },
     { id: "test", label: " Kiểm tra", icon: "📝" },
+    { id: "documents", label: " Tài liệu", icon: "📄" },
   ];
 
   const handleNextFlashcard = () => {
@@ -867,6 +883,112 @@ export function LessonContent({ lesson }: LessonContentProps) {
                   </span>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Documents Tab */}
+        {activeTab === "documents" && (
+          <div className="space-y-6 animate-in fade-in-0 zoom-in-95 duration-300">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-2xl font-bold mb-4">
+                📄
+                <span className="text-orange-600">Tài liệu liên quan</span>
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Dưới đây là các tài liệu học tập liên quan đến bài học này.
+              </p>
+
+              {/* Documents List */}
+              {documents.length > 0 ? (
+                <div className="space-y-4">
+                  {documents.map((document) => (
+                    <div
+                      key={document.id}
+                      className="border rounded-lg p-6 hover:shadow-lg transition-all duration-300"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                            <span className="text-orange-600 text-lg">
+                              {document.category === "slide" ? "📊" : 
+                               document.category === "doc" ? "📄" : "📋"}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800">
+                              {document.title}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {document.description || "Không có mô tả"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                              document.category === "slide"
+                                ? "bg-blue-100 text-blue-800"
+                                : document.category === "doc"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-purple-100 text-purple-800"
+                            }`}
+                          >
+                            {document.category === "slide"
+                              ? "Slide"
+                              : document.category === "doc"
+                              ? "Tài liệu"
+                              : "Bảng tính"}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <div className="flex space-x-4">
+                          <span>
+                            Loại:{" "}
+                            {document.source_type === "upload" ? "Tải lên" : "Liên kết"}
+                          </span>
+                          <span>
+                            Thứ tự: {document.display_order}
+                          </span>
+                        </div>
+                        <div className="flex space-x-2">
+                          {document.source_type === "upload" && document.file_path ? (
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/documents/${document.file_path}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                            >
+                              Tải xuống
+                            </a>
+                          ) : document.source_type === "link" && document.external_url ? (
+                            <a
+                              href={document.external_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                            >
+                              Mở liên kết
+                            </a>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">📄</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    Chưa có tài liệu
+                  </h3>
+                  <p className="text-gray-600">
+                    Hiện tại chưa có tài liệu nào được liên kết với bài học này.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
