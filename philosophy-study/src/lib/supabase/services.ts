@@ -598,6 +598,28 @@ export const supabaseServices = {
     return data?.map(mapLessonFromSupabase) || [];
   },
 
+  async getLessonsWithFlashcards(): Promise<Lesson[]> {
+    const { data, error } = await supabase
+      .from("lessons")
+      .select(`
+        *,
+        flashcards (
+          *
+        )
+      `)
+      .order("display_order", { ascending: true });
+
+    if (error) {
+      console.error(" Error fetching lessons with flashcards:", error);
+      throw error;
+    }
+    
+    return (data || []).map((lesson) => ({
+      ...lesson,
+      flashcards: lesson.flashcards || [],
+    }));
+  },
+
   async getLessonById(id: string): Promise<Lesson | null> {
     const { data, error } = await supabase
       .from("lessons")
@@ -773,6 +795,35 @@ export const supabaseServices = {
     };
   },
 
+  async getTestByIdWithLessons(testId: string): Promise<Test | null> {
+    const { data, error } = await supabase
+      .from("tests")
+      .select(`
+        *,
+        test_lessons (
+          lesson_id,
+          lessons (
+            id,
+            title
+          )
+        )
+      `)
+      .eq("id", testId)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows returned
+    
+    if (!data) return null;
+    
+    return {
+      ...data,
+      related_lessons: data.test_lessons?.map((tl: { lessons: { id: string; title: string } }) => ({
+        id: tl.lessons.id,
+        title: tl.lessons.title,
+      })) || [],
+    };
+  },
+
   async getTestLessons(testId: string): Promise<string[]> {
     const { data, error } = await supabase
       .from("test_lessons")
@@ -898,6 +949,32 @@ export const supabaseServices = {
     );
 
     return testsWithLessons;
+  },
+
+  async getAllTestsWithLessons(): Promise<Test[]> {
+    const { data, error } = await supabase
+      .from("tests")
+      .select(`
+        *,
+        test_lessons (
+          lesson_id,
+          lessons (
+            id,
+            title
+          )
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map((test) => ({
+      ...test,
+      related_lessons: test.test_lessons?.map((tl: { lessons: { id: string; title: string } }) => ({
+        id: tl.lessons.id,
+        title: tl.lessons.title,
+      })) || [],
+    }));
   },
 
   async deleteTest(testId: string): Promise<void> {

@@ -53,7 +53,7 @@ export default function EditTestPage() {
         setAllLessons(lessons);
 
         // Load test data
-        const test = await supabaseServices.getTestById(testId);
+        const test = await supabaseServices.getTestByIdWithLessons(testId);
         if (!test) {
           setError("Bài test không tồn tại");
           return;
