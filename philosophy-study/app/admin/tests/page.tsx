@@ -54,16 +54,14 @@ export default function AdminTestsPage() {
   useEffect(() => {
     const loadTests = async () => {
       try {
-        const data = await supabaseServices.getAllTests();
+        const data = await supabaseServices.getAllTestsWithLessons();
         setTests(data);
 
-        // Load lesson titles for all tests
+        // Create lesson titles map from the related_lessons data
         const titlesMap: Record<string, string[]> = {};
         for (const test of data) {
-          // Fetch lesson IDs for this test using the service function
-          const lessonIds = await supabaseServices.getTestLessons(test.id);
-          if (lessonIds && lessonIds.length > 0) {
-            const titles = await getLessonTitles(lessonIds);
+          if (test.related_lessons && test.related_lessons.length > 0) {
+            const titles = test.related_lessons.map(lesson => lesson.title);
             // Remove duplicates using Set
             const uniqueTitles = [...new Set(titles)];
             titlesMap[test.id] = uniqueTitles;
