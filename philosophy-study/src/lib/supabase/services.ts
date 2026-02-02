@@ -5,6 +5,7 @@ import type {
   UserProgress,
   Chapter,
   Lesson,
+  Document,
 } from "../types";
 import type { Test, TestQuestion } from "../types/test";
 import type { Section } from "../types/lesson";
@@ -1066,5 +1067,351 @@ export const supabaseServices = {
       await this.markLessonCompleted(userId, chapterId, lessonId);
       return true;
     }
+  },
+
+  // Documents
+  async getDocuments(): Promise<Document[]> {
+    const { data, error } = await supabase
+      .from("documents")
+      .select(`
+        *,
+        document_lessons (
+          lesson_id,
+          lessons (
+            id,
+            title,
+            chapter_id,
+            chapters (
+              id,
+              title
+            )
+          )
+        )
+      `)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((doc) => ({
+      ...doc,
+      linked_lessons: doc.document_lessons?.map((dl: {
+        lesson_id: string;
+        lessons: {
+          id: string;
+          title: string;
+          chapter_id: string;
+          chapters: {
+            id: string;
+            title: string;
+          };
+        };
+      }) => ({
+        document_id: doc.id,
+        lesson_id: dl.lesson_id,
+        lesson: {
+          id: dl.lessons.id,
+          title: dl.lessons.title,
+          chapter_id: dl.lessons.chapter_id,
+          chapter: {
+            id: dl.lessons.chapters.id,
+            title: dl.lessons.chapters.title,
+          },
+        },
+      })) || [],
+    }));
+  },
+
+  async getDocumentsByChapterId(chapterId: string): Promise<Document[]> {
+    const { data, error } = await supabase
+      .from("documents")
+      .select(`
+        *,
+        document_lessons (
+          lesson_id,
+          lessons (
+            id,
+            title,
+            chapter_id,
+            chapters (
+              id,
+              title
+            )
+          )
+        )
+      `)
+      .eq("document_lessons.lessons.chapter_id", chapterId)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((doc) => ({
+      ...doc,
+      linked_lessons: doc.document_lessons?.map((dl: {
+        lesson_id: string;
+        lessons: {
+          id: string;
+          title: string;
+          chapter_id: string;
+          chapters: {
+            id: string;
+            title: string;
+          };
+        };
+      }) => ({
+        document_id: doc.id,
+        lesson_id: dl.lesson_id,
+        lesson: {
+          id: dl.lessons.id,
+          title: dl.lessons.title,
+          chapter_id: dl.lessons.chapter_id,
+          chapter: {
+            id: dl.lessons.chapters.id,
+            title: dl.lessons.chapters.title,
+          },
+        },
+      })) || [],
+    }));
+  },
+
+  async getDocumentsByLessonId(lessonId: string): Promise<Document[]> {
+    const { data, error } = await supabase
+      .from("documents")
+      .select(`
+        *,
+        document_lessons (
+          lesson_id,
+          lessons (
+            id,
+            title,
+            chapter_id,
+            chapters (
+              id,
+              title
+            )
+          )
+        )
+      `)
+      .eq("document_lessons.lesson_id", lessonId)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((doc) => ({
+      ...doc,
+      linked_lessons: doc.document_lessons?.map((dl: {
+        lesson_id: string;
+        lessons: {
+          id: string;
+          title: string;
+          chapter_id: string;
+          chapters: {
+            id: string;
+            title: string;
+          };
+        };
+      }) => ({
+        document_id: doc.id,
+        lesson_id: dl.lesson_id,
+        lesson: {
+          id: dl.lessons.id,
+          title: dl.lessons.title,
+          chapter_id: dl.lessons.chapter_id,
+          chapter: {
+            id: dl.lessons.chapters.id,
+            title: dl.lessons.chapters.title,
+          },
+        },
+      })) || [],
+    }));
+  },
+
+  async getDocumentsWithNoLesson(): Promise<Document[]> {
+    const { data, error } = await supabase
+      .from("documents")
+      .select(`
+        *,
+        document_lessons (
+          lesson_id
+        )
+      `)
+      .is("document_lessons.lesson_id", null)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((doc) => ({
+      ...doc,
+      linked_lessons: [],
+    }));
+  },
+
+  async getDocumentsWithNoChapter(): Promise<Document[]> {
+    const { data, error } = await supabase
+      .from("documents")
+      .select(`
+        *,
+        document_lessons (
+          lesson_id,
+          lessons (
+            id,
+            title,
+            chapter_id,
+            chapters (
+              id,
+              title
+            )
+          )
+        )
+      `)
+      .or(
+        `document_lessons.lesson_id.is.null,document_lessons.lessons.chapter_id.is.null`
+      )
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((doc) => ({
+      ...doc,
+      linked_lessons: doc.document_lessons?.map((dl: {
+        lesson_id: string;
+        lessons?: {
+          id: string;
+          title: string;
+          chapter_id: string;
+          chapters?: {
+            id: string;
+            title: string;
+          };
+        };
+      }) => ({
+        document_id: doc.id,
+        lesson_id: dl.lesson_id,
+        lesson: dl.lessons ? {
+          id: dl.lessons.id,
+          title: dl.lessons.title,
+          chapter_id: dl.lessons.chapter_id,
+          chapter: dl.lessons.chapters ? {
+            id: dl.lessons.chapters.id,
+            title: dl.lessons.chapters.title,
+          } : undefined,
+        } : undefined,
+      })) || [],
+    }));
+  },
+
+  async createDocument(documentData: {
+    title: string;
+    category: "slide" | "doc" | "sheet";
+    description?: string;
+    source_type: "upload" | "link";
+    file_path?: string;
+    file_extension?: string;
+    external_url?: string;
+    display_order: number;
+  }): Promise<Document> {
+    const { data, error } = await supabase
+      .from("documents")
+      .insert([
+        {
+          ...documentData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ])
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateDocument(
+    id: string,
+    updates: Partial<Document>,
+  ): Promise<Document> {
+    const { data, error } = await supabase
+      .from("documents")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteDocument(id: string): Promise<void> {
+    // First delete related document_lessons
+    const { error: dlError } = await supabase
+      .from("document_lessons")
+      .delete()
+      .eq("document_id", id);
+
+    if (dlError) throw dlError;
+
+    // Then delete the document
+    const { error: docError } = await supabase
+      .from("documents")
+      .delete()
+      .eq("id", id);
+
+    if (docError) throw docError;
+  },
+
+  async createDocumentLessons(
+    documentId: string,
+    lessonIds: string[],
+  ): Promise<void> {
+    // Delete existing document_lessons for this document
+    const { error: deleteError } = await supabase
+      .from("document_lessons")
+      .delete()
+      .eq("document_id", documentId);
+
+    if (deleteError) throw deleteError;
+
+    // Insert new document_lessons
+    if (lessonIds.length > 0) {
+      const documentLessonsData = lessonIds.map((lessonId) => ({
+        document_id: documentId,
+        lesson_id: lessonId,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("document_lessons")
+        .insert(documentLessonsData);
+
+      if (insertError) throw insertError;
+    }
+  },
+
+  async uploadDocumentFile(
+    file: File,
+    documentId: string,
+  ): Promise<string> {
+    const fileExtension = file.name.split(".").pop();
+    const fileName = `${documentId}.${fileExtension}`;
+    
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) throw error;
+    
+    return fileName;
+  },
+
+  async deleteDocumentFile(fileName: string): Promise<void> {
+    const { error } = await supabase.storage
+      .from("documents")
+      .remove([fileName]);
+
+    if (error) throw error;
   },
 };
