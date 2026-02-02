@@ -34,10 +34,11 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
     description: document?.description || "",
     source_type: (document?.source_type as "upload" | "link") || "upload",
     external_url: document?.external_url || "",
-    linked_lesson_ids: document?.linked_lessons?.map(dl => dl.lesson_id) || [],
+    linked_lesson_ids:
+      document?.linked_lessons?.map((dl) => dl.lesson_id) || [],
     display_order: document?.display_order || 1,
   });
-  
+
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,17 +49,20 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
 
     try {
       let fileData = {};
-      
+
       // Handle file upload if in upload mode
       if (formData.source_type === "upload" && file) {
         setIsUploading(true);
-        
+
         // Generate a unique document ID for the file
         const documentId = document?.id || crypto.randomUUID();
-        
+
         try {
-          const fileName = await supabaseServices.uploadDocumentFile(file, documentId);
-          
+          const fileName = await supabaseServices.uploadDocumentFile(
+            file,
+            documentId,
+          );
+
           fileData = {
             file_path: fileName,
             file_extension: file.name.split(".").pop(),
@@ -83,23 +87,29 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
         ...fileData,
       };
 
-        // Create or update document
+      // Create or update document
       if (document?.id) {
         // Update existing document
         await supabaseServices.updateDocument(document.id, documentData);
-        
+
         // Update linked lessons
         if (formData.linked_lesson_ids.length > 0) {
-          await supabaseServices.createDocumentLessons(document.id, formData.linked_lesson_ids);
+          await supabaseServices.createDocumentLessons(
+            document.id,
+            formData.linked_lesson_ids,
+          );
         }
       } else {
-      // Create new document
-      const newDocument = await supabaseServices.createDocument(documentData);
-      
-      // Create linked lessons if any
-      if (formData.linked_lesson_ids.length > 0) {
-        await supabaseServices.createDocumentLessons(newDocument.id, formData.linked_lesson_ids);
-      }
+        // Create new document
+        const newDocument = await supabaseServices.createDocument(documentData);
+
+        // Create linked lessons if any
+        if (formData.linked_lesson_ids.length > 0) {
+          await supabaseServices.createDocumentLessons(
+            newDocument.id,
+            formData.linked_lesson_ids,
+          );
+        }
       }
 
       onSubmit(documentData);
@@ -112,16 +122,16 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
   };
 
   const handleLessonToggle = (lessonId: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       linked_lesson_ids: prev.linked_lesson_ids.includes(lessonId)
-        ? prev.linked_lesson_ids.filter(id => id !== lessonId)
-        : [...prev.linked_lesson_ids, lessonId]
+        ? prev.linked_lesson_ids.filter((id) => id !== lessonId)
+        : [...prev.linked_lesson_ids, lessonId],
     }));
   };
 
   const getLessonsForChapter = (chapterId: string) => {
-    return lessons.filter(lesson => lesson.chapter_id === chapterId);
+    return lessons.filter((lesson) => lesson.chapter_id === chapterId);
   };
 
   return (
@@ -134,8 +144,18 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           onClick={onClose}
           className="text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -156,7 +176,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
               required
             />
@@ -168,10 +190,12 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             </label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                category: e.target.value as "slide" | "doc" | "sheet" 
-              }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  category: e.target.value as "slide" | "doc" | "sheet",
+                }))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
               required
             >
@@ -188,7 +212,9 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           </label>
           <textarea
             value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, description: e.target.value }))
+            }
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
             placeholder="Mô tả ngắn về tài liệu..."
@@ -200,16 +226,18 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Loại nguồn *
           </label>
-          <div className="flex space-x-4">
+          <div className="flex space-x-4 text-gray-800">
             <label className="flex items-center">
               <input
                 type="radio"
                 value="upload"
                 checked={formData.source_type === "upload"}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  source_type: e.target.value as "upload" | "link" 
-                }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    source_type: e.target.value as "upload" | "link",
+                  }))
+                }
                 className="mr-2"
               />
               Tải lên tệp tin
@@ -219,10 +247,12 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                 type="radio"
                 value="link"
                 checked={formData.source_type === "link"}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  source_type: e.target.value as "upload" | "link" 
-                }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    source_type: e.target.value as "upload" | "link",
+                  }))
+                }
                 className="mr-2"
               />
               Liên kết ngoài
@@ -256,7 +286,12 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             <input
               type="url"
               value={formData.external_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, external_url: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  external_url: e.target.value,
+                }))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
               placeholder="https://docs.google.com/..."
               required={formData.source_type === "link"}
@@ -273,10 +308,12 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             type="number"
             min="1"
             value={formData.display_order}
-            onChange={(e) => setFormData(prev => ({ 
-              ...prev, 
-              display_order: parseInt(e.target.value) || 1 
-            }))}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                display_order: parseInt(e.target.value) || 1,
+              }))
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-800"
             required
           />
@@ -288,9 +325,10 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
             Liên kết với bài học
           </label>
           <p className="text-sm text-gray-600 mb-3">
-            Chọn các bài học mà tài liệu này sẽ được liên kết (có thể chọn nhiều)
+            Chọn các bài học mà tài liệu này sẽ được liên kết (có thể chọn
+            nhiều)
           </p>
-          
+
           <div className="space-y-4 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4">
             {chapters.map((chapter) => {
               const chapterLessons = getLessonsForChapter(chapter.id);
@@ -303,14 +341,21 @@ export const DocumentForm: React.FC<DocumentFormProps> = ({
                   </h4>
                   <div className="space-y-1 pl-4">
                     {chapterLessons.map((lesson) => (
-                      <label key={lesson.id} className="flex items-center space-x-2 cursor-pointer">
+                      <label
+                        key={lesson.id}
+                        className="flex items-center space-x-2 cursor-pointer"
+                      >
                         <input
                           type="checkbox"
-                          checked={formData.linked_lesson_ids.includes(lesson.id)}
+                          checked={formData.linked_lesson_ids.includes(
+                            lesson.id,
+                          )}
                           onChange={() => handleLessonToggle(lesson.id)}
                           className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                         />
-                        <span className="text-sm text-gray-700">{lesson.title}</span>
+                        <span className="text-sm text-gray-700">
+                          {lesson.title}
+                        </span>
                       </label>
                     ))}
                   </div>
