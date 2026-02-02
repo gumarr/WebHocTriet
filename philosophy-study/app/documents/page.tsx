@@ -111,7 +111,7 @@ export default function DocumentsPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, chapterId: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
               >
                 <option value="all">Tất cả các chương</option>
                 {chapters.map((chapter) => (
@@ -131,7 +131,7 @@ export default function DocumentsPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, category: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
               >
                 <option value="all">Tất cả loại</option>
                 <option value="slide">Slide bài giảng</option>
@@ -149,7 +149,7 @@ export default function DocumentsPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, sourceType: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-800"
               >
                 <option value="all">Tất cả nguồn</option>
                 <option value="upload">Tải lên</option>
