@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAppContext } from "@/src/lib/context/AppContext";
+import { useAuth } from "@/src/lib/context/AuthContext";
 import { getChapters } from "@/src/lib/utils/data";
-import { Chapter, Lesson } from "@/src/lib/types/chapter";
+import { Chapter, ChapterLesson } from "@/src/lib/types/chapter";
 
 export default function Home() {
   const router = useRouter();
   const { userProgress } = useAppContext();
+  const { isAdmin } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,7 +38,7 @@ export default function Home() {
     // Find the first incomplete chapter
     const incompleteChapter = chapters.find(
       (chapter) =>
-        !chapter.lessons.every((lesson: Lesson) =>
+        !chapter.lessons.every((lesson: ChapterLesson) =>
           userProgress.completedLessons.includes(lesson.id),
         ),
     );
@@ -49,7 +52,7 @@ export default function Home() {
 
   const getProgressPercentage = () => {
     const totalLessons = chapters.reduce(
-      (acc, chapter) => acc + chapter.lessons.length,
+      (acc, chapter) => acc + (chapter.lessons?.length || 0),
       0,
     );
     const completed = userProgress.completedLessons.length;
@@ -68,24 +71,156 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-slate-100 to-slate-200">
       <div className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full mx-auto flex items-center justify-center shadow-lg">
-              <span className="text-white text-2xl font-bold">TL</span>
-            </div>
+            <Image
+              src="/images/MLNLOGO.jpg"
+              alt="Triết Học Mác - Lênin Logo"
+              width={96}
+              height={96}
+              className="w-24 h-24 rounded-full mx-auto shadow-lg object-cover"
+            />
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Triết Học Mác - Lênin
-          </h1>
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">The Agora</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Hệ thống ôn tập triết học Mác - Lênin hiện đại, giúp bạn hiểu sâu
             sắc các khái niệm triết học thông qua sơ đồ tư duy, flashcards và
             bài test được thiết kế theo lý thuyết học tập hiện đại.
           </p>
         </div>
+
+        {/* Admin Management Section */}
+        {isAdmin && (
+          <div className="philosophy-card p-8 mb-12 bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                Quản trị viên
+              </h2>
+              <p className="text-gray-600">Quản lý nội dung và bài học</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <button
+                onClick={() => router.push("/admin/lessons")}
+                className="philosophy-card p-6 hover:shadow-lg transition-all duration-300 text-center group"
+              >
+                <div className="w-16 h-16 bg-emerald-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Quản lý Bài học
+                </h3>
+                <p className="text-gray-600">
+                  Thêm, sửa, xóa các bài học và nội dung
+                </p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/flashcards")}
+                className="philosophy-card p-6 hover:shadow-lg transition-all duration-300 text-center group"
+              >
+                <div className="w-16 h-16 bg-emerald-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    {/* The "Back" Card */}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2"
+                    />
+                    {/* The "Front" Card */}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 8h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Quản lý Flashcards
+                </h3>
+                <p className="text-gray-600">Quản lý các thẻ học và câu hỏi</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/tests")}
+                className="philosophy-card p-6 hover:shadow-lg transition-all duration-300 text-center group"
+              >
+                <div className="w-16 h-16 bg-emerald-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Quản lý Bài Test
+                </h3>
+                <p className="text-gray-600">Tạo và quản lý các bài kiểm tra</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/documents")}
+                className="philosophy-card p-6 hover:shadow-lg transition-all duration-300 text-center group"
+              >
+                <div className="w-16 h-16 bg-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white">
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 12h.01M12 15h.01M12 18h.01"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Tài liệu học tập
+                </h3>
+                <p className="text-gray-600">Xem và tải các tài liệu học tập</p>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Progress Overview */}
         <div className="philosophy-card p-8 mb-12">
@@ -122,8 +257,8 @@ export default function Home() {
               Bản Đồ Kiến Thức
             </h2>
             <p className="text-gray-600">
-              Khám phá toàn bộ chương trình triết học Mác - Lênin thông qua sơ đồ
-              tư duy trực quan
+              Khám phá toàn bộ chương trình triết học Mác - Lênin thông qua sơ
+              đồ tư duy trực quan
             </p>
           </div>
 
@@ -149,15 +284,21 @@ export default function Home() {
           {/* Knowledge Map Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {chapters.map((chapter) => {
-              const completedLessons = 0; // This would be calculated based on actual data
-              const totalLessons = chapter.lessons.length;
-              const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+              const completedLessons =
+                chapter.lessons?.filter((lesson) =>
+                  userProgress.completedLessons.includes(lesson.id),
+                ).length || 0;
+              const totalLessons = chapter.lessons?.length || 0;
+              const progress =
+                totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
               return (
                 <div
                   key={chapter.id}
-                  className="philosophy-card p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                  onClick={() => router.push(`/lesson/${chapter.lessons[0]?.id || ''}`)}
+                  className="philosophy-card p-6 shadow-lg transition-all duration-300 cursor-pointer group"
+                  onClick={() =>
+                    router.push(`/lesson/${chapter.lessons?.[0]?.id || ""}`)
+                  }
                 >
                   {/* Chapter Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -169,9 +310,13 @@ export default function Home() {
                         {chapter.description}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform">
-                      {chapter.order}
-                    </div>
+                    <Image
+                      src="/images/MLNLOGO.jpg"
+                      alt="Triết Học Mác - Lênin Logo"
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm group-hover:scale-110 transition-transform object-cover"
+                    />
                   </div>
 
                   {/* Progress Bar */}
@@ -195,12 +340,18 @@ export default function Home() {
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
                       Các bài học:
                     </h4>
-                    {chapter.lessons.map((lesson: Lesson) => (
+                    {chapter.lessons?.map((lesson) => (
                       <div
                         key={lesson.id}
-                        className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2"
+                        className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors group"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent event bubbling to parent
+                          router.push(`/lesson/${lesson.id}`);
+                        }}
                       >
-                        <span>{lesson.title}</span>
+                        <span className="group-hover:text-emerald-600 transition-colors">
+                          {lesson.title}
+                        </span>
                         <div className="flex items-center space-x-2">
                           <span
                             className={`w-2 h-2 rounded-full ${
@@ -209,6 +360,9 @@ export default function Home() {
                                 : "bg-gray-300"
                             }`}
                           ></span>
+                          <span className="text-xs text-gray-400 group-hover:text-emerald-600 transition-colors">
+                            →
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -216,7 +370,7 @@ export default function Home() {
 
                   {/* Action Button */}
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <button className="w-full philosophy-button py-2 text-center text-sm font-medium group-hover:bg-emerald-600 transition-colors">
+                    <button className="w-full philosophy-button py-2 text-center text-sm font-medium bg-emerald-600 hover:scale-105 transition">
                       Khám phá chương
                     </button>
                   </div>
@@ -226,30 +380,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
-          <button
-            onClick={() => router.push('/story')}
-            className="btn-primary px-8 py-4 text-lg font-semibold"
-          >
-            Hành trình triết học
-          </button>
-          <button
-            onClick={() => router.push(`/lesson/${chapters[0]?.lessons[0]?.id || ''}`)}
-            className="btn-primary px-8 py-4 text-lg font-semibold"
-          >
-            Bắt đầu học ngay
-          </button>
-          <button
-            onClick={() => router.push(`/lesson/${chapters[0]?.lessons[0]?.id || ''}`)}
-            className="btn-outline px-8 py-4 text-lg font-semibold"
-          >
-            Tiếp tục học
-          </button>
-        </div>
-
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
           <div className="philosophy-card p-6 text-center">
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -324,11 +456,48 @@ export default function Home() {
               đánh giá, giúp củng cố và ghi nhớ kiến thức lâu dài.
             </p>
           </div>
+
+          <div className="philosophy-card p-6 text-center">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-orange-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 12h.01M12 15h.01M12 18h.01"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Tài liệu học tập
+            </h3>
+            <p className="text-gray-600">
+              Truy cập các tài liệu học tập, slide bài giảng và tài liệu tham khảo
+              được phân loại theo chương và loại tài liệu.
+            </p>
+            <button
+              onClick={() => router.push("/documents")}
+              className="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+            >
+              Xem tài liệu
+            </button>
+          </div>
         </div>
 
         {/* Statistics */}
         <div className="philosophy-card p-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold text-emerald-600">
                 {chapters.length}
@@ -338,7 +507,7 @@ export default function Home() {
             <div>
               <div className="text-3xl font-bold text-emerald-600">
                 {chapters.reduce(
-                  (acc, chapter) => acc + chapter.lessons.length,
+                  (acc, chapter) => acc + (chapter.lessons?.length || 0),
                   0,
                 )}
               </div>
@@ -349,27 +518,15 @@ export default function Home() {
                 {chapters.reduce(
                   (acc, chapter) =>
                     acc +
-                    chapter.lessons.reduce(
-                      (lessonAcc: number, lesson: Lesson) =>
-                        lessonAcc + lesson.flashcards.length,
+                    (chapter.lessons?.reduce(
+                      (lessonAcc: number, lesson) =>
+                        lessonAcc + (lesson.flashcards?.length || 0),
                       0,
-                    ),
+                    ) || 0),
                   0,
                 )}
               </div>
               <div className="text-gray-600 mt-2">Flashcards</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-emerald-600">
-                {chapters.reduce(
-                  (acc, chapter) =>
-                    acc +
-                    chapter.lessons.filter((lesson: Lesson) => lesson.test)
-                      .length,
-                  0,
-                )}
-              </div>
-              <div className="text-gray-600 mt-2">Bài test</div>
             </div>
           </div>
         </div>

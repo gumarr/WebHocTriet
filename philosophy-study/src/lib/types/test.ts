@@ -1,21 +1,32 @@
 export interface Test {
   id: string;
-  lessonId: string;
   title: string;
   description: string;
   duration: number; // in minutes
-  totalQuestions: number;
-  passingScore: number; // percentage
+  total_questions: number;
+  passing_score: number; // percentage
   questions: TestQuestion[];
+  related_lessons?: { id: string; title: string }[]; // Array of lesson objects with ID and title
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface TestLesson {
+  id: string;
+  test_id: string;
+  lesson_id: string;
+  display_order: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface TestQuestion {
   id: string;
   question: string;
   options: string[];
-  correctAnswer: number;
+  correct_answer: number;
   explanation: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   category: string;
 }
 

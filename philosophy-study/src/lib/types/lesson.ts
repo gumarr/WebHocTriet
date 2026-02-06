@@ -1,51 +1,56 @@
 export interface Lesson {
   id: string;
   title: string;
-  chapterId: string;
-  order: number;
+  chapter_id: string;
+  display_order: number;
   content?: string;
   sections?: Section[];
   summary: string;
-  flashcards: Flashcard[];
-  test: Test;
+  flashcards: LessonFlashcard[];
+  test: LessonTest;
 }
 
 export interface Section {
   id: string;
   title: string;
   content: string;
+  display_order: number;
+  lesson_id: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export interface Flashcard {
+export interface LessonFlashcard {
+  lesson_id: string;
   id: string;
   question: string;
   answer: string;
   category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  createdAt: Date;
-  lastReviewed?: Date;
-  reviewCount: number;
-  correctCount: number;
-  isMarked: boolean;
+  difficulty: "easy" | "medium" | "hard";
+  created_at: Date;
+  last_reviewed?: Date;
+  review_count: number;
+  correct_count: number;
+  is_marked: boolean;
 }
 
-export interface Test {
+export interface LessonTest {
   id: string;
-  lessonId: string;
   title: string;
   description: string;
   duration: number;
   totalQuestions: number;
   passingScore: number;
   questions: TestQuestion[];
+  lessonIds: string[];
 }
 
 export interface TestQuestion {
   id: string;
   question: string;
   options: string[];
-  correctAnswer: number;
+  correct_answer: number;
   explanation: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   category: string;
 }
